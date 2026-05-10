@@ -1999,7 +1999,7 @@
             renderFriends();
         }
         function copyLink() { const v = $('shareLink').value; navigator.clipboard.writeText(v).then(() => toast('📋 Copied!')).catch(() => { $('shareLink').select(); document.execCommand('copy'); toast('📋 Copied!'); }); }
-        function waShare() { const url = shareUrl(CU.id); window.open(`https://wa.me/?text=${encodeURIComponent('📅 Book a slot with me!\n\n' + url)}`, '_blank'); }
+        function waShare() { const url = shareUrl(CU.id); window.open(`https://wa.me/?text=${encodeURIComponent('📅 Day-Vo with me!\n\n' + url)}`, '_blank'); }
 
         /* ── TABS ── */
         function showTab(t) {
