@@ -1404,46 +1404,46 @@
             .wk-grid {
                 grid-template-columns: 34px repeat(7, 1fr);
             }
-            
+
             .ph select {
                 width: 90px;
                 padding: 13px 4px;
                 font-size: 11px;
             }
-            
+
             .modal {
                 padding: 20px 16px;
                 margin: auto;
             }
-            
+
             .modal-ov {
                 align-items: flex-start;
                 padding-top: 40px;
             }
-            
+
             .profile-dropdown {
                 right: -10px;
             }
         }
-        
+
         .h-row.night-time {
             background: #f8fafc;
             opacity: 0.9;
         }
-        
+
         .h-row.night-time .h-lbl {
             color: #64748b;
         }
-        
+
         .h-slot.night-time {
-            background: rgba(0,0,0,0.02);
+            background: rgba(0, 0, 0, 0.02);
         }
-        
+
         .wk-c.night-time {
-            background: rgba(0,0,0,0.02);
+            background: rgba(0, 0, 0, 0.02);
             color: #64748b;
         }
-        
+
         .wk-hl.night-time {
             color: #94a3b8;
         }
@@ -1776,7 +1776,7 @@
         function numVal(id) { return $(id).value.trim().replace(/^0+/, ''); }
         function fullNum(ccId, numId) { return ccVal(ccId).replace('+', '') + numVal(numId); }
         function fullNumDisp(ccId, numId) { return ccVal(ccId) + numVal(numId); }
-        
+
         function formatTimeAmpm(hour) {
             const ampm = hour >= 12 ? 'PM' : 'AM';
             const h = hour % 12 || 12;
@@ -1796,57 +1796,87 @@
         let firebaseReady = false;
         let db = null;
         try {
-            if (typeof firebase !== 'undefined') { 
-                firebase.initializeApp(firebaseConfig); 
-                firebaseReady = firebaseConfig.apiKey !== 'YOUR_API_KEY'; 
-                if(firebaseReady) db = firebase.firestore();
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                firebaseReady = firebaseConfig.apiKey !== 'YOUR_API_KEY';
+                if (firebaseReady) {
+                    db = firebase.firestore();
+                    firebase.auth().onAuthStateChanged(async (u) => {
+                        if (u) {
+                            const uid = u.uid;
+                            let us = S.users(), userData = us[uid];
+                            if (db && !userData) {
+                                try {
+                                    const doc = await db.collection('users').doc(uid).get();
+                                    if (doc.exists) userData = doc.data();
+                                } catch (e) { }
+                            }
+                            if (!userData) { userData = { id: uid, name: u.displayName || 'User', phone: u.phoneNumber || u.email || u.uid, provider: 'google', avatar: u.photoURL || null, email: u.email, firebaseUid: uid, created: new Date().toISOString() }; }
+                            pushUser(userData);
+                            CU = userData; S.setCur(CU);
+                            if (VU && VU.id !== CU.id) { addFriend(VU); renderCal(); }
+                            else if (!$('loginScreen').classList.contains('hidden')) { await syncMyData(); enterApp(); }
+                            else { await syncMyData(); }
+                        }
+                    });
+                }
             }
         } catch (e) { console.warn('Firebase init skipped:', e.message); }
 
         function pushUser(u) {
             let us = S.users(); us[u.id] = u; S.setUsers(us);
-            if(db) db.collection('users').doc(u.id).set(u).catch(e=>console.error(e));
+            if (db) db.collection('users').doc(u.id).set(u).catch(e => console.error(e));
         }
         function pushBooking(bk) {
-            let bks = S.bookings(); 
-            const ex = bks.findIndex(b=>b.id===bk.id); 
-            if(ex>=0) bks[ex]=bk; else bks.push(bk); 
+            let bks = S.bookings();
+            const ex = bks.findIndex(b => b.id === bk.id);
+            if (ex >= 0) bks[ex] = bk; else bks.push(bk);
             S.setBookings(bks);
-            if(db) db.collection('bookings').doc(bk.id).set(bk).catch(e=>console.error(e));
+            if (db) db.collection('bookings').doc(bk.id).set(bk).catch(e => console.error(e));
         }
         function pushBlock(bk) {
             let bks = S.blocks();
             const ex = bks.findIndex(b => b.id === bk.id);
-            if(ex >= 0) bks[ex] = bk; else bks.push(bk);
+            if (ex >= 0) bks[ex] = bk; else bks.push(bk);
             S.setBlocks(bks);
-            if(db) db.collection('blocks').doc(bk.id).set(bk).catch(e=>console.error(e));
+            if (db) db.collection('blocks').doc(bk.id).set(bk).catch(e => console.error(e));
         }
         function deleteBlock(id) {
             let bks = S.blocks().filter(b => b.id !== id); S.setBlocks(bks);
-            if(db) db.collection('blocks').doc(id).delete().catch(e=>console.error(e));
+            if (db) db.collection('blocks').doc(id).delete().catch(e => console.error(e));
         }
 
         async function syncMyData() {
-            if(!CU || !db) return;
+            if (!CU || !db) return;
             try {
                 const bSnap = await db.collection('bookings').where('owner', '==', CU.id).get();
                 const blSnap = await db.collection('blocks').where('owner', '==', CU.id).get();
                 const outSnap = await db.collection('bookings').where('bookerPhone', '==', CU.phone).get();
-                
+                const frSnap = await db.collection('friends').doc(CU.id).get();
+
                 let allBksMap = {};
                 S.bookings().forEach(b => allBksMap[b.id] = b);
                 bSnap.forEach(d => allBksMap[d.id] = d.data());
                 outSnap.forEach(d => allBksMap[d.id] = d.data());
                 S.setBookings(Object.values(allBksMap));
-                
+
                 let allBlksMap = {};
                 S.blocks().forEach(b => allBlksMap[b.id] = b);
                 blSnap.forEach(d => allBlksMap[d.id] = d.data());
                 S.setBlocks(Object.values(allBlksMap));
-                
-                if(curView) renderCal();
-                if($('bookingsTab') && !$('bookingsTab').classList.contains('hidden')) loadBk();
-            } catch(e) { console.error('Sync error', e); }
+
+                if (frSnap.exists) {
+                    const list = frSnap.data().list || [];
+                    S.setFriends(CU.id, list);
+                    let us = S.users();
+                    for (const f of list) { if (!us[f.id]) { const uDoc = await db.collection('users').doc(f.id).get(); if (uDoc.exists) us[f.id] = uDoc.data(); } }
+                    S.setUsers(us);
+                }
+
+                if (curView) renderCal();
+                if ($('bookingsTab') && !$('bookingsTab').classList.contains('hidden')) loadBk();
+                if ($('profileTab') && !$('profileTab').classList.contains('hidden')) renderFriends();
+            } catch (e) { console.error('Sync error', e); }
         }
 
         async function oAuth(provider) {
@@ -1863,22 +1893,22 @@
                 const phone = u.phoneNumber || u.email || u.uid;
                 const avatar = u.photoURL || null;
                 const uid = u.uid; // Firebase UID
-                
+
                 let us = S.users();
                 let userData = us[uid];
                 if (db) {
                     try {
                         const doc = await db.collection('users').doc(uid).get();
                         if (doc.exists) userData = doc.data();
-                    } catch(e){}
+                    } catch (e) { }
                 }
                 if (!userData) { userData = { id: uid, name, phone, provider, avatar, email: u.email, firebaseUid: uid, created: new Date().toISOString() }; }
                 userData.name = name;
-                if(avatar) userData.avatar = avatar;
-                
+                if (avatar) userData.avatar = avatar;
+
                 pushUser(userData);
                 CU = userData; S.setCur(CU);
-                
+
                 await syncMyData();
                 enterApp();
                 toast('✅ Signed in as ' + name);
@@ -1888,11 +1918,11 @@
                 else toast('❌ Sign-in failed: ' + (e.message || 'Unknown error'));
             }
         }
-        function guestLogin() { 
-            if(!confirm("Data is saved temporarily on this device.\n\nLogin with Google to save your data permanently to your account.\n\nContinue as guest?")) return;
-            const n = $('guestName').value.trim(), num = numVal('guestPhone'); 
-            if (!n || !num) { toast('❌ Enter name and phone'); return; } 
-            doLogin(n, ccVal('lCC') + num, 'guest'); 
+        function guestLogin() {
+            if (!confirm("Data is saved temporarily on this device.\n\nLogin with Google to save your data permanently to your account.\n\nContinue as guest?")) return;
+            const n = $('guestName').value.trim(), num = numVal('guestPhone');
+            if (!n || !num) { toast('❌ Enter name and phone'); return; }
+            doLogin(n, ccVal('lCC') + num, 'guest');
         }
         function doLogin(name, phone, provider) {
             let us = S.users(), uid = Object.entries(us).find(([, u]) => u.phone === phone)?.[0];
@@ -1900,7 +1930,7 @@
             else { CU = us[uid]; CU.name = name; pushUser(CU); }
             S.setCur(CU); enterApp();
         }
-        function logout() { CU = null; S.setCur(null); location.href = getUrl(); }
+        function logout() { CU = null; S.setCur(null); if (firebaseReady) firebase.auth().signOut(); location.href = getUrl(); }
         function toggleProfileMenu(e) { e.stopPropagation(); const dd = $('profileDropdown'); dd.classList.toggle('open'); }
         document.addEventListener('click', () => { const dd = $('profileDropdown'); if (dd) dd.classList.remove('open'); });
 
@@ -1914,7 +1944,11 @@
         function addFriend(friendUser) {
             if (!CU || CU.id === friendUser.id) return;
             let fr = S.friends(CU.id);
-            if (!fr.find(f => f.id === friendUser.id)) { fr.push({ id: friendUser.id, addedAt: new Date().toISOString() }); S.setFriends(CU.id, fr); }
+            if (!fr.find(f => f.id === friendUser.id)) {
+                fr.push({ id: friendUser.id, addedAt: new Date().toISOString() });
+                S.setFriends(CU.id, fr);
+                if (db) db.collection('friends').doc(CU.id).set({ list: fr }).catch(() => { });
+            }
         }
         function getFriends() {
             if (!CU) return [];
@@ -1922,7 +1956,9 @@
             return S.friends(CU.id).map(f => us[f.id]).filter(Boolean);
         }
         function removeFriend(fid) {
-            S.setFriends(CU.id, S.friends(CU.id).filter(f => f.id !== fid));
+            const fr = S.friends(CU.id).filter(f => f.id !== fid);
+            S.setFriends(CU.id, fr);
+            if (db) db.collection('friends').doc(CU.id).set({ list: fr }).catch(() => { });
             renderFriends(); toast('Removed from friends');
         }
         function renderFriends() {
@@ -2019,7 +2055,7 @@
                 const isNight = (i < 6 || i >= 18);
                 const icon = isNight ? '🌑' : '☀️';
                 const nightCls = isNight ? ' night-time' : '';
-                
+
                 if (blk && !pub) {
                     // Owner sees busy slot: click row to toggle back to available, label input below
                     const lbl = blk.label || '';
@@ -2160,7 +2196,7 @@
         function handleEventUrl(p) {
             const title = p.get('title') || 'Meeting';
             const dt = p.get('dt'), st = p.get('st'), en = p.get('en'), note = p.get('note') || '';
-            if(!dt || !st) return; 
+            if (!dt || !st) return;
 
             const sf = (dt + 'T' + st + ':00').replace(/[-:]/g, '');
             const ef = (dt + 'T' + en + ':00').replace(/[-:]/g, '');
@@ -2169,7 +2205,7 @@
             const icsUrl = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`;
 
             let inviter = "a friend";
-            if(title.startsWith('Meeting with ')) inviter = title.replace('Meeting with ', '');
+            if (title.startsWith('Meeting with ')) inviter = title.replace('Meeting with ', '');
 
             document.body.innerHTML = `
             <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);padding:20px;font-family:sans-serif;">
@@ -2192,7 +2228,7 @@
             </div>`;
         }
 
-        function invMsg(dt, st, en, note) { 
+        function invMsg(dt, st, en, note) {
             const [h, m] = st.split(':');
             const t = formatTimeAmpm(parseInt(h));
             const title = encodeURIComponent(`Meeting with ${CU.name}`);
@@ -2200,7 +2236,7 @@
             const ef = (dt + 'T' + en + ':00').replace(/[-:]/g, '');
             const gcal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${sf}/${ef}&details=${encodeURIComponent(note || '')}`;
             const calUrl = shareUrl(CU.id) + `&event=1&title=${title}&dt=${dt}&st=${st}&en=${en}&note=${encodeURIComponent(note || '')}`;
-            
+
             return `يا هلا اجتماعنا الساعة ${t} تاريخ ${dt} رتب موعدك عبر: ${gcal}\n\nأو\n\n${calUrl}\n\nTry Dayvo!\nhttps://king10asd.github.io/dayvo/`;
         }
         function openSingle() { $('siDate').value = fmtD(new Date()); $('siPhone').value = ''; $('siNote').value = ''; $('siModal').classList.remove('hidden'); }
@@ -2253,15 +2289,30 @@
 
         /* ── ENTER APP / PUBLIC ── */
         function updateNav() {
-            if(!CU) return;
+            if (!CU) return;
             $('navName').textContent = CU.name;
-            $('pdName').textContent = CU.name; 
+            $('pdName').textContent = CU.name;
             $('pdPhone').textContent = CU.phone;
             const nAv = $('navAv');
-            if(CU.avatar) nAv.innerHTML = `<img src="${CU.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+            if (CU.avatar) nAv.innerHTML = `<img src="${CU.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
             else nAv.textContent = CU.name.charAt(0).toUpperCase();
         }
-        function enterApp() { $('loginScreen').classList.add('hidden'); $('mainApp').classList.remove('hidden'); updateNav(); showTab('calendar'); }
+        function enterApp() {
+            $('loginScreen').classList.add('hidden'); $('mainApp').classList.remove('hidden'); updateNav(); showTab('calendar');
+
+            const pAdd = S.g('pending_add');
+            if (pAdd) {
+                S.s('pending_add', null);
+                const existing = S.blocks().find(b => b.owner === CU.id && b.date === pAdd.dt && b.start === pAdd.st && b.end === pAdd.en);
+                if (!existing) {
+                    pushBlock({ id: genId(), owner: CU.id, date: pAdd.dt, start: pAdd.st, end: pAdd.en, label: pAdd.title, created: new Date().toISOString() });
+                    toast('✅ Added to Dayvo Calendar!');
+                    renderCal();
+                } else {
+                    toast('⚠️ Slot already busy in Dayvo');
+                }
+            }
+        }
         function enterPublic(user) {
             VU = user;
             const saved = S.cur();
@@ -2303,42 +2354,47 @@
 
         /* ── INIT ── */
         async function init() {
-            const p = new URLSearchParams(window.location.search), uid = p.get('user'), event = p.get('event');
-            if (event) { handleEventUrl(p); return; }
-            
+            const p = new URLSearchParams(window.location.search), uid = p.get('user'), event = p.get('event'), addDayvo = p.get('add_dayvo');
+
+            if (addDayvo) {
+                S.s('pending_add', { title: p.get('title'), dt: p.get('dt'), st: p.get('st'), en: p.get('en') });
+                window.history.replaceState({}, '', getUrl());
+            }
+            else if (event) { handleEventUrl(p); return; }
+
             if (uid) {
                 let user = S.users()[uid];
                 if (!user && db) {
                     try {
                         const doc = await db.collection('users').doc(uid).get();
                         if (doc.exists) { user = doc.data(); let us = S.users(); us[uid] = user; S.setUsers(us); }
-                    } catch(e){}
+                    } catch (e) { }
                 }
-                if (user) { 
-                    if(db) {
+                if (user) {
+                    if (db) {
                         try {
                             const bSnap = await db.collection('bookings').where('owner', '==', uid).get();
                             const blSnap = await db.collection('blocks').where('owner', '==', uid).get();
                             let allBksMap = {}; S.bookings().forEach(b => allBksMap[b.id] = b);
                             bSnap.forEach(d => allBksMap[d.id] = d.data());
                             S.setBookings(Object.values(allBksMap));
-                            
+
                             let allBlksMap = {}; S.blocks().forEach(b => allBlksMap[b.id] = b);
                             blSnap.forEach(d => allBlksMap[d.id] = d.data());
                             S.setBlocks(Object.values(allBlksMap));
-                        } catch(e){}
+                        } catch (e) { }
                     }
-                    const saved = S.cur(); 
-                    if (saved && saved.id === uid) { CU = user; enterApp(); syncMyData(); } else { enterPublic(user); } 
+                    const saved = S.cur();
+                    if (saved && saved.id === uid) { CU = user; enterApp(); syncMyData(); } else { enterPublic(user); }
                 }
                 else toast('❌ User not found');
             } else {
-                const saved = S.cur(); 
-                if (saved && saved.id) { 
-                    const us = S.users(); 
-                    if (us[saved.id]) { 
-                        CU = us[saved.id]; enterApp(); syncMyData(); 
-                    } 
+                const saved = S.cur();
+                if (saved && saved.id) {
+                    const us = S.users();
+                    if (us[saved.id]) {
+                        CU = us[saved.id]; enterApp(); syncMyData();
+                    }
                 }
             }
         }
