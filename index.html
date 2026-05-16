@@ -1453,6 +1453,33 @@
 
 <body>
 
+    <!-- LOADING -->
+    <div id="loadingScreen" class="login-screen"
+        style="z-index:9999;position:fixed;top:0;left:0;width:100%;height:100%;">
+        <div style="text-align:center;color:white;">
+            <div class="logo-icon" style="animation: pulse 1.5s infinite ease-in-out;">📅</div>
+            <h2 style="margin-top:20px;font-size:22px;">Loading Calgo...</h2>
+            <style>
+                @keyframes pulse {
+                    0% {
+                        transform: scale(0.95);
+                        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+                    }
+
+                    70% {
+                        transform: scale(1.05);
+                        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+                    }
+
+                    100% {
+                        transform: scale(0.95);
+                        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+                    }
+                }
+            </style>
+        </div>
+    </div>
+
     <!-- LOGIN -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
@@ -1547,32 +1574,42 @@
                 <div style="margin-bottom:18px;">
                     <div class="friends-title">👥 My Friends <span id="fCount"
                             style="font-size:12px;color:var(--text-light);font-weight:400;"></span>
-                        <button onclick="$('addFriendBox').classList.toggle('hidden')" style="margin-left:auto;width:auto;padding:5px 13px;font-size:12px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;cursor:pointer;font-weight:700;">+ Add Friend</button>
+                        <button onclick="$('addFriendBox').classList.toggle('hidden')"
+                            style="margin-left:auto;width:auto;padding:5px 13px;font-size:12px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;cursor:pointer;font-weight:700;">+
+                            Add Friend</button>
                     </div>
                     <!-- Add Friend Box -->
-                    <div id="addFriendBox" class="hidden" style="background:#f8fafc;border-radius:14px;border:2px dashed var(--border);padding:14px;margin-bottom:12px;">
-                        <div style="background:white;border-left:4px solid var(--primary);padding:10px;border-radius:8px;margin-bottom:12px;font-size:12px;color:var(--text-light);">
+                    <div id="addFriendBox" class="hidden"
+                        style="background:#f8fafc;border-radius:14px;border:2px dashed var(--border);padding:14px;margin-bottom:12px;">
+                        <div
+                            style="background:white;border-left:4px solid var(--primary);padding:10px;border-radius:8px;margin-bottom:12px;font-size:12px;color:var(--text-light);">
                             <strong style="color:var(--primary);">How to add friends:</strong><br>
                             1. <strong>By Phone:</strong> Enter their number below to search and add them<br>
-                            2. <strong>By QR Code:</strong> Share your QR code below, they scan it and you're automatically added as friends
+                            2. <strong>By QR Code:</strong> Share your QR code below, they scan it and you're
+                            automatically added as friends
                         </div>
-                        <div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:8px;">Add by phone number:</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:8px;">Add by
+                            phone number:</div>
                         <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
-                            <div class="ph" style="margin:0;flex:1;min-width:180px;"><select id="afCC" style="margin:0;width:90px;padding:10px 4px;font-size:11px;">
-                                <option value="966">🇸🇦 +966</option>
-                                <option value="971">🇦🇪 +971</option>
-                                <option value="965">🇰🇼 +965</option>
-                                <option value="974">🇶🇦 +974</option>
-                                <option value="973">🇧🇭 +973</option>
-                                <option value="968">🇴🇲 +968</option>
-                                <option value="962">🇯🇴 +962</option>
-                                <option value="20">🇪🇬 +20</option>
-                                <option value="1">🇺🇸 +1</option>
-                                <option value="44">🇬🇧 +44</option>
-                            </select><input type="tel" id="afPhone" placeholder="5xxxxxxxx" style="margin:0;" onkeydown="if(event.key==='Enter')addFriendByPhone()"></div>
-                            <button onclick="addFriendByPhone()" style="width:auto;padding:10px 16px;margin:0;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;">Find</button>
+                            <div class="ph" style="margin:0;flex:1;min-width:180px;"><select id="afCC"
+                                    style="margin:0;width:90px;padding:10px 4px;font-size:11px;">
+                                    <option value="966">🇸🇦 +966</option>
+                                    <option value="971">🇦🇪 +971</option>
+                                    <option value="965">🇰🇼 +965</option>
+                                    <option value="974">🇶🇦 +974</option>
+                                    <option value="973">🇧🇭 +973</option>
+                                    <option value="968">🇴🇲 +968</option>
+                                    <option value="962">🇯🇴 +962</option>
+                                    <option value="20">🇪🇬 +20</option>
+                                    <option value="1">🇺🇸 +1</option>
+                                    <option value="44">🇬🇧 +44</option>
+                                </select><input type="tel" id="afPhone" placeholder="5xxxxxxxx" style="margin:0;"
+                                    onkeydown="if(event.key==='Enter')addFriendByPhone()"></div>
+                            <button onclick="addFriendByPhone()"
+                                style="width:auto;padding:10px 16px;margin:0;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;">Find</button>
                         </div>
-                        <div style="font-size:11px;color:var(--text-light);margin-top:8px;">Or share your link below — friends who open it are added automatically.</div>
+                        <div style="font-size:11px;color:var(--text-light);margin-top:8px;">Or share your link below —
+                            friends who open it are added automatically.</div>
                     </div>
                     <div id="friendsList"></div>
                 </div>
@@ -1582,8 +1619,10 @@
                 <!-- SHARE / QR -->
                 <div class="share-box">
                     <h4>🔗 Share Your Calendar</h4>
-                    <p class="sh-sub" style="margin-bottom:14px;">Friends who scan this QR are added to your friends list automatically</p>
-                    <div style="background:white;border-left:4px solid #25D366;padding:10px;border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-light);">
+                    <p class="sh-sub" style="margin-bottom:14px;">Friends who scan this QR are added to your friends
+                        list automatically</p>
+                    <div
+                        style="background:white;border-left:4px solid #25D366;padding:10px;border-radius:8px;margin-bottom:14px;font-size:12px;color:var(--text-light);">
                         <strong style="color:#25D366;">Sharing Methods:</strong><br>
                         📋 <strong>Copy Link:</strong> Share the link below via any messaging app<br>
                         🗣️ <strong>WhatsApp:</strong> Click the WhatsApp button to share directly<br>
@@ -1609,15 +1648,19 @@
 
         <!-- CALENDAR -->
         <div id="calendarTab" class="hidden">
-            <div class="card" style="background:linear-gradient(135deg,#eef2ff,#f3e8ff);border:1px solid var(--primary);margin-bottom:16px;">
+            <div class="card"
+                style="background:linear-gradient(135deg,#eef2ff,#f3e8ff);border:1px solid var(--primary);margin-bottom:16px;">
                 <div style="display:flex;gap:12px;align-items:flex-start;">
                     <div style="font-size:28px;flex-shrink:0;">📅</div>
                     <div>
                         <strong style="color:var(--primary);font-size:14px;">How Booking Works:</strong>
                         <div style="font-size:12px;color:var(--text-light);margin-top:6px;line-height:1.5;">
-                            <strong>Your Calendar:</strong> Mark time slots as Available (green) or Busy (red). Friends can book available slots.<br>
-                            <strong>Incoming Requests:</strong> Friends request to book your time. Accept or reject in the Bookings tab.<br>
-                            <strong>Outgoing Requests:</strong> You can invite friends to specific times via WhatsApp or Calendar link.
+                            <strong>Your Calendar:</strong> Mark time slots as Available (green) or Busy (red). Friends
+                            can book available slots.<br>
+                            <strong>Incoming Requests:</strong> Friends request to book your time. Accept or reject in
+                            the Bookings tab.<br>
+                            <strong>Outgoing Requests:</strong> You can invite friends to specific times via WhatsApp or
+                            Calendar link.
                         </div>
                     </div>
                 </div>
@@ -1760,10 +1803,11 @@
             <div class="mr"><label>Message (optional)</label><textarea id="grNote" rows="2" style="margin:0;"
                     placeholder="You're invited!"></textarea></div>
             <div class="sep" style="margin:14px 0;"></div>
-                <div class="mr">
+            <div class="mr">
                 <label>Add Phone Number</label>
                 <div style="display:flex;gap:7px;align-items:center;flex-wrap:nowrap;overflow:hidden;">
-                    <div class="ph" style="margin:0;flex:1;min-width:0;overflow:hidden;"><select id="grCC" style="margin:0;width:80px;flex-shrink:0;padding:10px 3px;font-size:11px;">
+                    <div class="ph" style="margin:0;flex:1;min-width:0;overflow:hidden;"><select id="grCC"
+                            style="margin:0;width:80px;flex-shrink:0;padding:10px 3px;font-size:11px;">
                             <option value="966">🇸🇦 +966</option>
                             <option value="971">🇦🇪 +971</option>
                             <option value="965">🇰🇼 +965</option>
@@ -1802,15 +1846,57 @@
     <div id="expModal" class="modal-ov hidden" onclick="if(event.target===this)cModal('expModal')">
         <div class="modal">
             <h3>📤 Export to Google Calendar</h3>
-            <p style="font-size:13px;color:var(--text-light);text-align:center;margin-bottom:14px;">Select which events to export:</p>
+            <p style="font-size:13px;color:var(--text-light);text-align:center;margin-bottom:14px;">Select which events
+                to export:</p>
             <div style="display:flex;gap:8px;margin-bottom:10px;">
-                <button onclick="expToggleAll(true)" style="flex:1;margin:0;padding:8px;font-size:12px;border-radius:9px;background:#eef2ff;color:var(--primary);border:none;cursor:pointer;font-weight:700;">Select All</button>
-                <button onclick="expToggleAll(false)" style="flex:1;margin:0;padding:8px;font-size:12px;border-radius:9px;background:#f1f5f9;color:var(--text-light);border:none;cursor:pointer;font-weight:700;">Deselect All</button>
+                <button onclick="expToggleAll(true)"
+                    style="flex:1;margin:0;padding:8px;font-size:12px;border-radius:9px;background:#eef2ff;color:var(--primary);border:none;cursor:pointer;font-weight:700;">Select
+                    All</button>
+                <button onclick="expToggleAll(false)"
+                    style="flex:1;margin:0;padding:8px;font-size:12px;border-radius:9px;background:#f1f5f9;color:var(--text-light);border:none;cursor:pointer;font-weight:700;">Deselect
+                    All</button>
             </div>
-            <div id="expList" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;"></div>
+            <div id="expList" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;">
+            </div>
             <div class="m-acts" style="margin-top:16px;">
                 <button class="btn-p" onclick="doExport()" style="flex:2;">📤 Export Selected</button>
                 <button class="btn-x" onclick="cModal('expModal')" style="flex:1;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Book Slot -->
+    <div id="bkModal" class="modal-ov hidden" onclick="if(event.target===this)cModal('bkModal')">
+        <div class="modal">
+            <h3>📅 Book an Appointment</h3>
+            <div class="mr"><label>Your Name</label><input type="text" id="bkName" placeholder="John Doe"
+                    style="margin:0;"></div>
+            <div class="mr"><label>Your Phone Number</label>
+                <div class="ph" style="margin:0;"><select id="bkCC">
+                        <option value="966">🇸🇦 +966</option>
+                        <option value="971">🇦🇪 +971</option>
+                        <option value="965">🇰🇼 +965</option>
+                        <option value="974">🇶🇦 +974</option>
+                        <option value="20">🇪🇬 +20</option>
+                        <option value="1">🇺🇸 +1</option>
+                        <option value="44">🇬🇧 +44</option>
+                    </select><input type="tel" id="bkPhone" placeholder="5xxxxxxxx" style="margin:0;"></div>
+            </div>
+            <div class="mr"><label>Date</label><input type="date" id="bkDate" readonly
+                    style="margin:0;background:#f8fafc;color:#64748b;cursor:not-allowed;"></div>
+            <div style="display:flex;gap:9px;">
+                <div class="mr" style="flex:1;"><label>From</label><input type="time" id="bkStart" readonly
+                        style="margin:0;background:#f8fafc;color:#64748b;cursor:not-allowed;"></div>
+                <div class="mr" style="flex:1;"><label>To</label><input type="time" id="bkEnd" readonly
+                        style="margin:0;background:#f8fafc;color:#64748b;cursor:not-allowed;"></div>
+            </div>
+            <div class="mr"><label>Note (optional)</label><textarea id="bkNote" rows="2" style="margin:0;"
+                    placeholder="What is this regarding?"></textarea></div>
+            <div class="m-acts">
+                <button class="btn-p" onclick="submitBook()"
+                    style="flex:1;padding:13px;font-size:14px;border-radius:13px;">Book Slot</button>
+                <button class="btn-x" onclick="cModal('bkModal')"
+                    style="flex:1;padding:13px;font-size:14px;border-radius:13px;">Cancel</button>
             </div>
         </div>
     </div>
@@ -1853,7 +1939,7 @@
         /* ── UTILS ── */
         const $ = id => document.getElementById(id);
         function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-        function fmtD(d) { const y=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0'); return `${y}-${mo}-${dy}`; }
+        function fmtD(d) { const y = d.getFullYear(), mo = String(d.getMonth() + 1).padStart(2, '0'), dy = String(d.getDate()).padStart(2, '0'); return `${y}-${mo}-${dy}`; }
         function pTime(t) { const [h, m] = t.split(':').map(Number); return h + m / 60; }
         function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
         function getUrl() { return window.location.href.split('?')[0].split('#')[0]; }
@@ -1891,6 +1977,7 @@
                 if (firebaseReady) {
                     db = firebase.firestore();
                     firebase.auth().onAuthStateChanged(async (u) => {
+                        $('loadingScreen').classList.add('hidden');
                         if (u && !authStateProcessed) {
                             authStateProcessed = true; // Prevent re-entry
                             const uid = u.uid;
@@ -1909,9 +1996,14 @@
                             else { await syncMyData(); }
                         }
                     });
+                } else {
+                    $('loadingScreen').classList.add('hidden');
                 }
+            } else {
+                $('loadingScreen').classList.add('hidden');
             }
-        } catch (e) { console.warn('Firebase init skipped:', e.message); }
+        } catch (e) { console.warn('Firebase init skipped:', e.message); $('loadingScreen').classList.add('hidden'); }
+        setTimeout(() => { $('loadingScreen').classList.add('hidden'); }, 4000); // Fallback
 
         function pushUser(u) {
             let us = S.users(); us[u.id] = u; S.setUsers(us);
@@ -2098,9 +2190,9 @@
             const u = S.users()[uid]; if (!u) return;
             openSingle();
             let ph = u.phone.replace(/^\+/, ''); // strip leading +
-            const codes = ['966','971','965','974','973','968','962','20','1','44'];
+            const codes = ['966', '971', '965', '974', '973', '968', '962', '20', '1', '44'];
             // Sort longest first to avoid partial matches (e.g. '1' matching before '966')
-            const sorted = [...codes].sort((a,b) => b.length - a.length);
+            const sorted = [...codes].sort((a, b) => b.length - a.length);
             for (const cc of sorted) {
                 if (ph.startsWith(cc)) {
                     $('siCC').value = cc;
@@ -2313,7 +2405,7 @@
                 $('bkName').value = CU.name;
                 // Strip country code reliably — same logic as prefillInvite
                 let ph = CU.phone.replace(/^\+/, '');
-                const codes = ['966','971','965','974','973','968','962','20','1','44'].sort((a,b) => b.length - a.length);
+                const codes = ['966', '971', '965', '974', '973', '968', '962', '20', '1', '44'].sort((a, b) => b.length - a.length);
                 let localNum = ph;
                 for (const cc of codes) { if (ph.startsWith(cc)) { localNum = ph.slice(cc.length); break; } }
                 $('bkPhone').value = localNum;
@@ -2351,8 +2443,8 @@
                 const ar = b.status === 'accepted'
                     ? `<button class="bs bs-rej" onclick="respond('${b.id}','rejected')">✕ Cancel</button>`
                     : b.status === 'rejected'
-                    ? `<button class="bs bs-acc" onclick="respond('${b.id}','accepted')">✓ Accept</button>`
-                    : `<button class="bs bs-acc" onclick="respond('${b.id}','accepted')">✓ Accept</button><button class="bs bs-rej" onclick="respond('${b.id}','rejected')">✕ Reject</button>`;
+                        ? `<button class="bs bs-acc" onclick="respond('${b.id}','accepted')">✓ Accept</button>`
+                        : `<button class="bs bs-acc" onclick="respond('${b.id}','accepted')">✓ Accept</button><button class="bs bs-rej" onclick="respond('${b.id}','rejected')">✕ Reject</button>`;
                 return `<div class="bk-item"><div class="bk-info"><div class="bk-name">👤 ${b.bookerName} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${b.bookerPhone}</span></div><div class="bk-meta">📅 ${b.date} 🕐 ${b.start}–${b.end}${b.note ? ' 📝 ' + b.note : ''}</div>${badge(b.status)}</div><div class="bk-acts">${ar}${calB}</div></div>`;
             }).join('');
             if (!out.length) outEl.innerHTML = '<div class="empty"><span class="em">📭</span>No outgoing requests yet</div>';
@@ -2400,7 +2492,7 @@
             <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);padding:20px;font-family:sans-serif;">
                 <div style="background:white;padding:40px 30px;border-radius:24px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);max-width:400px;width:100%;">
                     <div style="font-size:50px;margin-bottom:15px;">📅</div>
-                    <h2 style="margin:0 0 15px;font-size:20px;color:#1e293b;line-height:1.4;">You received an invitation from <strong>${inviter}</strong> on ${dt} at ${formatTimeAmpm(parseInt(st.split(':')[0]), parseInt(st.split(':')[1]||0))}.<br><br>Shall I add this to your Calendar?</h2>
+                    <h2 style="margin:0 0 15px;font-size:20px;color:#1e293b;line-height:1.4;">You received an invitation from <strong>${inviter}</strong> on ${dt} at ${formatTimeAmpm(parseInt(st.split(':')[0]), parseInt(st.split(':')[1] || 0))}.<br><br>Shall I add this to your Calendar?</h2>
                     
                     <div style="display:flex;gap:10px;margin-top:25px;">
                         <button onclick="document.getElementById('calOpts').style.display='block';this.style.display='none';document.getElementById('noBtn').style.display='none'" style="flex:1;background:#22c55e;color:white;border:none;padding:14px;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer;">Yes</button>
@@ -2426,12 +2518,13 @@
             const gcal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${sf}/${ef}&details=${encodeURIComponent(note || '')}`;
             const calUrl = shareUrl(CU.id) + `&event=1&title=${title}&dt=${dt}&st=${st}&en=${en}&note=${encodeURIComponent(note || '')}`;
 
-            return `You received an invitation from ${CU.name} 📅\n\nDate: ${dt}\nTime: ${t}\n${note ? 'Note: ' + note + '\n' : ''}\nAdd to your calendar:\n👉 ${calUrl}\n\nOr open in Google Calendar:\n👉 ${gcal}\n\n— Sent via Calgo: https://king10asd.github.io/dayvo/`;
+            return `You received an invitation from ${CU.name} 📅\n\nDate: ${dt}\nTime: ${t}\n\nAdd to your calendar:\n${calUrl}`;
         }
         function openSingle() { $('siDate').value = fmtD(new Date()); $('siPhone').value = ''; $('siNote').value = ''; $('siModal').classList.remove('hidden'); }
         function sendSingle() {
             const cc = $('siCC').value, num = numVal('siPhone'), dt = $('siDate').value, st = $('siStart').value, en = $('siEnd').value, note = $('siNote').value.trim();
             if (!num || !dt || !st || !en) { toast('❌ Fill all fields'); return; } if (st >= en) { toast('❌ End after start'); return; }
+            if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
             const waNum = cc + num; // siCC values already have no +, correct for wa.me links
             window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank'); toast('📨 Opening WhatsApp…');
         }
@@ -2464,6 +2557,7 @@
         function sendOne(ph) {
             const dt = $('grDate').value, st = $('grStart').value, en = $('grEnd').value, note = $('grNote').value.trim();
             if (!dt || !st || !en) { toast('❌ Fill date/time first'); return; } if (st >= en) { toast('❌ End after start'); return; }
+            if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
             window.open(`https://wa.me/${ph}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank');
             const c = GC.find(x => x.ph === ph); if (c) c.sent = true; renderGC();
         }
@@ -2471,6 +2565,7 @@
             if (!GC.length) { toast('❌ Add contacts first'); return; }
             const dt = $('grDate').value, st = $('grStart').value, en = $('grEnd').value, note = $('grNote').value.trim();
             if (!dt || !st || !en) { toast('❌ Fill date/time first'); return; } if (st >= en) { toast('❌ End after start'); return; }
+            if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
             const unsent = GC.filter(c => !c.sent);
             if (!unsent.length) { toast('✅ All already sent!'); return; }
             unsent.forEach((c, i) => setTimeout(() => { window.open(`https://wa.me/${c.ph}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank'); c.sent = true; renderGC(); }, i * 700));
@@ -2561,6 +2656,7 @@
                     } catch (e) { }
                 }
                 if (user) {
+                    $('loadingScreen').classList.add('hidden'); // Also hide loading
                     if (db) {
                         try {
                             const bSnap = await db.collection('bookings').where('owner', '==', uid).get();
@@ -2577,14 +2673,18 @@
                     const saved = S.cur();
                     if (saved && saved.id === uid) { CU = user; enterApp(); syncMyData(); } else { enterPublic(user); }
                 }
-                else { toast('❌ User not found'); const saved = S.cur(); if (saved && saved.id) { const us = S.users(); if (us[saved.id]) { CU = us[saved.id]; enterApp(); syncMyData(); } } }
+                else { toast('❌ User not found'); const saved = S.cur(); if (saved && saved.id) { const us = S.users(); if (us[saved.id]) { CU = us[saved.id]; enterApp(); syncMyData(); } else { $('loadingScreen').classList.add('hidden'); } } else { $('loadingScreen').classList.add('hidden'); } }
             } else {
                 const saved = S.cur();
                 if (saved && saved.id) {
                     const us = S.users();
                     if (us[saved.id]) {
                         CU = us[saved.id]; enterApp(); syncMyData();
+                    } else {
+                        $('loadingScreen').classList.add('hidden');
                     }
+                } else {
+                    $('loadingScreen').classList.add('hidden');
                 }
             }
         }
