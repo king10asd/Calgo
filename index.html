@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='68' text-anchor='middle' font-size='50'>📅</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1608,6 +1609,10 @@
                             <button onclick="addFriendByPhone()"
                                 style="width:auto;padding:10px 16px;margin:0;background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;border:none;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;">Find</button>
                         </div>
+                        <div style="margin-top:12px;text-align:center;">
+                            <button class="btn-p" onclick="startScanner()" style="width:auto;padding:8px 16px;font-size:13px;">📷 Scan QR Code</button>
+                        </div>
+                        <div id="qr-reader" style="width: 100%; max-width: 300px; margin: 10px auto; display:none; border-radius:14px; overflow:hidden;"></div>
                         <div style="font-size:11px;color:var(--text-light);margin-top:8px;">Or share your link below —
                             friends who open it are added automatically.</div>
                     </div>
@@ -2068,11 +2073,16 @@
                 return;
             }
             try {
+                $('loadingScreen').classList.remove('hidden');
                 let authProvider = new firebase.auth.GoogleAuthProvider();
                 const result = await firebase.auth().signInWithPopup(authProvider);
                 const u = result.user;
                 const name = u.displayName || 'User';
-                const phone = u.phoneNumber || u.email || u.uid;
+                let phone = u.phoneNumber;
+                if (!phone) {
+                    phone = prompt('Please enter your phone number with country code (e.g. +9665xxxxxxxx):');
+                    if (!phone) phone = u.email || u.uid;
+                }
                 const avatar = u.photoURL || null;
                 const uid = u.uid; // Firebase UID
 
@@ -2095,6 +2105,7 @@
                 enterApp();
                 toast('✅ Signed in as ' + name);
             } catch (e) {
+                $('loadingScreen').classList.add('hidden');
                 console.error('Auth error:', e);
                 if (e.code === 'auth/popup-closed-by-user') toast('⚠️ Sign-in cancelled');
                 else toast('❌ Sign-in failed: ' + (e.message || 'Unknown error'));
@@ -2149,6 +2160,37 @@
             $('afPhone').value = '';
             $('addFriendBox').classList.add('hidden');
             toast('✅ ' + found.name + ' added to friends!');
+        }
+        let html5QrcodeScanner = null;
+        function startScanner() {
+            $('qr-reader').style.display = 'block';
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 200 });
+                html5QrcodeScanner.render((text) => {
+                    html5QrcodeScanner.clear();
+                    html5QrcodeScanner = null;
+                    $('qr-reader').style.display = 'none';
+                    try {
+                        const url = new URL(text);
+                        const uid = url.searchParams.get('user');
+                        if (uid) { addFriendByUid(uid); } else { toast('❌ Invalid QR code'); }
+                    } catch(e) { toast('❌ Invalid QR code'); }
+                }, (error) => { });
+            }
+        }
+        async function addFriendByUid(uid) {
+            if (uid === CU.id) { toast('⚠️ That\'s your own code!'); return; }
+            let us = S.users();
+            let found = us[uid];
+            if (!found && db) {
+                toast('🔍 Searching…');
+                try {
+                    const snap = await db.collection('users').doc(uid).get();
+                    if (snap.exists) { found = snap.data(); us[found.id] = found; S.setUsers(us); }
+                } catch(e) {}
+            }
+            if (found) { addFriend(found); renderFriends(); toast('✅ ' + found.name + ' added to friends!'); }
+            else { toast('❌ User not found'); }
         }
         function addFriend(friendUser) {
             if (!CU || CU.id === friendUser.id) return;
@@ -2501,9 +2543,9 @@
                     
                     <div id="calOpts" style="display:none;margin-top:15px;">
                         <p style="margin-bottom:10px;font-size:14px;color:#64748b;">Choose your calendar:</p>
+                        <a href="${shareUrl(p.get('user'))}&add_dayvo=1&title=${encodeURIComponent(title)}&dt=${dt}&st=${st}&en=${en}&note=${encodeURIComponent(note)}" style="display:block;background:linear-gradient(135deg, #6366f1, #8b5cf6);color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;transition:0.2s;">Accept via Calgo</a>
                         <a href="${gcal}" target="_blank" style="display:block;background:#4285F4;color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;transition:0.2s;">Google Calendar</a>
                         <a href="${icsUrl}" download="meeting.ics" style="display:block;background:#1e293b;color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;transition:0.2s;">Apple / Outlook</a>
-                        <a href="https://king10asd.github.io/dayvo/" style="display:block;margin-top:20px;color:#6366f1;font-weight:bold;text-decoration:none;font-size:14px;">Try Calgo!</a>
                     </div>
                 </div>
             </div>`;
@@ -2521,12 +2563,30 @@
             return `You received an invitation from ${CU.name} 📅\n\nDate: ${dt}\nTime: ${t}\n\nAdd to your calendar:\n${calUrl}`;
         }
         function openSingle() { $('siDate').value = fmtD(new Date()); $('siPhone').value = ''; $('siNote').value = ''; $('siModal').classList.remove('hidden'); }
-        function sendSingle() {
+        async function sendSingle() {
             const cc = $('siCC').value, num = numVal('siPhone'), dt = $('siDate').value, st = $('siStart').value, en = $('siEnd').value, note = $('siNote').value.trim();
             if (!num || !dt || !st || !en) { toast('❌ Fill all fields'); return; } if (st >= en) { toast('❌ End after start'); return; }
             if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
             const waNum = cc + num; // siCC values already have no +, correct for wa.me links
+            
+            // Link to outgoing requests
+            const fullPhone = '+' + waNum;
+            let targetUid = waNum;
+            const us = Object.values(S.users());
+            const found = us.find(u => u.phone === fullPhone || u.phone === waNum);
+            if (found) targetUid = found.id;
+            else if (db) {
+                try {
+                    const snap = await db.collection('users').where('phone', '==', fullPhone).limit(1).get();
+                    if (!snap.empty) targetUid = snap.docs[0].id;
+                } catch(e){}
+            }
+            const bk = { id: genId(), owner: targetUid, bookerName: CU.name, bookerPhone: CU.phone, date: dt, start: st, end: en, note: note, status: 'accepted', created: new Date().toISOString() };
+            pushBooking(bk);
+
             window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank'); toast('📨 Opening WhatsApp…');
+            cModal('siModal');
+            loadBk();
         }
         function addSingleCal() { const dt = $('siDate').value, st = $('siStart').value, en = $('siEnd').value, note = $('siNote').value.trim(); if (!dt || !st || !en) { toast('❌ Fill date/time'); return; } const t = encodeURIComponent(`Meeting – ${CU.name}`), sf = (dt + 'T' + st + ':00').replace(/[-:]/g, ''), ef = (dt + 'T' + en + ':00').replace(/[-:]/g, ''); window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${t}&dates=${sf}/${ef}&details=${encodeURIComponent(note || 'Calgo')}`, '_blank'); toast('📅 Opening Calendar…'); }
 
@@ -2558,8 +2618,12 @@
             const dt = $('grDate').value, st = $('grStart').value, en = $('grEnd').value, note = $('grNote').value.trim();
             if (!dt || !st || !en) { toast('❌ Fill date/time first'); return; } if (st >= en) { toast('❌ End after start'); return; }
             if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
+            
+            const bk = { id: genId(), owner: ph, bookerName: CU.name, bookerPhone: CU.phone, date: dt, start: st, end: en, note: note, status: 'accepted', created: new Date().toISOString() };
+            pushBooking(bk);
+
             window.open(`https://wa.me/${ph}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank');
-            const c = GC.find(x => x.ph === ph); if (c) c.sent = true; renderGC();
+            const c = GC.find(x => x.ph === ph); if (c) c.sent = true; renderGC(); loadBk();
         }
         function sendAllGC() {
             if (!GC.length) { toast('❌ Add contacts first'); return; }
@@ -2568,7 +2632,12 @@
             if (isPastTime(dt, parseInt(st.split(':')[0]))) { toast('❌ Cannot invite in the past'); return; }
             const unsent = GC.filter(c => !c.sent);
             if (!unsent.length) { toast('✅ All already sent!'); return; }
-            unsent.forEach((c, i) => setTimeout(() => { window.open(`https://wa.me/${c.ph}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank'); c.sent = true; renderGC(); }, i * 700));
+            unsent.forEach((c, i) => setTimeout(() => { 
+                const bk = { id: genId(), owner: c.ph, bookerName: CU.name, bookerPhone: CU.phone, date: dt, start: st, end: en, note: note, status: 'accepted', created: new Date().toISOString() };
+                pushBooking(bk);
+                window.open(`https://wa.me/${c.ph}?text=${encodeURIComponent(invMsg(dt, st, en, note))}`, '_blank'); 
+                c.sent = true; renderGC(); loadBk();
+            }, i * 700));
             toast(`📨 Sending to ${unsent.length}…`);
         }
 
@@ -2583,19 +2652,40 @@
             else nAv.textContent = CU.name.charAt(0).toUpperCase();
         }
         function enterApp() {
+            $('loadingScreen').classList.add('hidden');
             $('loginScreen').classList.add('hidden'); $('mainApp').classList.remove('hidden'); updateNav(); showTab('calendar');
+
+            // Handle friend from URL if logged in after QR scan
+            const p = new URLSearchParams(window.location.search);
+            const urlUser = p.get('user');
+            if (urlUser && urlUser !== CU.id) {
+                addFriendByUid(urlUser);
+                window.history.replaceState({}, '', getUrl());
+            }
 
             const pAdd = S.g('pending_add');
             if (pAdd) {
                 S.s('pending_add', null);
+                
+                // Add inviter as friend
+                const friendUid = pAdd.inviterUid || 'unknown';
+                if (friendUid !== 'unknown') { addFriendByUid(friendUid); }
+
+                // Block the slot in MY calendar
                 const existing = S.blocks().find(b => b.owner === CU.id && b.date === pAdd.dt && b.start === pAdd.st && b.end === pAdd.en);
                 if (!existing) {
                     pushBlock({ id: genId(), owner: CU.id, date: pAdd.dt, start: pAdd.st, end: pAdd.en, label: pAdd.title, created: new Date().toISOString() });
-                    toast('✅ Added to Calgo Calendar!');
-                    renderCal();
-                } else {
-                    toast('⚠️ Slot already busy in Calgo');
                 }
+
+                // Add to incoming bookings
+                const friendName = S.users()[friendUid]?.name || 'A Friend';
+                const friendPhone = S.users()[friendUid]?.phone || '';
+                const bk = { id: genId(), owner: CU.id, bookerName: friendName, bookerPhone: friendPhone, date: pAdd.dt, start: pAdd.st, end: pAdd.en, note: pAdd.note || '', status: 'accepted', created: new Date().toISOString() };
+                pushBooking(bk);
+
+                toast('✅ Event accepted and added to your calendar!');
+                renderCal();
+                showTab('bookings');
             }
         }
         function enterPublic(user) {
@@ -2642,7 +2732,7 @@
             const p = new URLSearchParams(window.location.search), uid = p.get('user'), event = p.get('event'), addDayvo = p.get('add_dayvo');
 
             if (addDayvo) {
-                S.s('pending_add', { title: p.get('title'), dt: p.get('dt'), st: p.get('st'), en: p.get('en') });
+                S.s('pending_add', { title: p.get('title'), dt: p.get('dt'), st: p.get('st'), en: p.get('en'), inviterUid: p.get('user'), note: p.get('note') });
                 window.history.replaceState({}, '', getUrl());
             }
             else if (event) { handleEventUrl(p); return; }
