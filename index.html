@@ -336,6 +336,9 @@
         .empty-state .empty-icon { font-size: 36px; margin-bottom: 9px; display: block; }
         .empty-state { text-align: center; padding: 36px 16px; color: var(--text-light); }
         .status-badge { display: inline-block; padding: 3px 11px; border-radius: 18px; font-size: 11px; font-weight: 700; margin-top: 7px; }
+        /* Pending booking highlight */
+        .booking-item.pending-booking { border-color: #f59e0b; background: #fffbeb; }
+        .booking-item.pending-booking:hover { border-color: #d97706; }
 
         /* ── MODALS ── */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 18px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; }
@@ -426,6 +429,42 @@
         .notif-badge.denied   { background: #fee2e2; color: #dc2626; }
         .notif-badge.default  { background: #eef2ff; color: var(--primary); border: 2px solid var(--border); }
 
+        /* ── LOADING OVERLAY ── */
+        .loading-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 18px; transition: opacity 0.5s ease;
+        }
+        .loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+        .loading-logo {
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,0.2); border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 42px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: loadingPulse 1.6s ease-in-out infinite;
+        }
+        .loading-title    { color: white; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        .loading-subtitle { color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 500; }
+        .loading-spinner  {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3); border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes loadingPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+            50%       { transform: scale(1.08); box-shadow: 0 16px 50px rgba(0,0,0,0.3); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── REMEMBER ME ── */
+        .remember-me-row { display: flex; align-items: center; gap: 9px; margin: 2px 0 8px; cursor: pointer; user-select: none; }
+        .remember-me-row input[type="checkbox"] { width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .remember-me-row span { font-size: 13px; color: var(--text-light); font-weight: 500; }
+
+        /* ── INVITE DURATION ROW ── */
+        .invite-duration-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 4px; }
+
         /* ── RESPONSIVE ── */
         @media(max-width:600px) {
             .login-card { padding: 32px 20px; }
@@ -443,9 +482,19 @@
 <body>
 
 <!-- ══════════════════════════════════════
+     LOADING OVERLAY
+══════════════════════════════════════ -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-logo">📅</div>
+    <div class="loading-title">Calgo</div>
+    <div class="loading-subtitle" id="loadingMessage">Loading…</div>
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- ══════════════════════════════════════
      LOGIN SCREEN
 ══════════════════════════════════════ -->
-<div id="loginScreen" class="login-screen">
+<div id="loginScreen" class="login-screen hidden">
     <div class="login-card">
         <div class="logo-icon">📅</div>
         <h1>Calgo</h1>
@@ -476,6 +525,10 @@
             </select>
             <input type="tel" id="guestPhone" placeholder="5xxxxxxxx">
         </div>
+        <label class="remember-me-row">
+            <input type="checkbox" id="rememberMeCheckbox" checked>
+            <span>Remember me on this device</span>
+        </label>
         <button class="btn-primary" onclick="guestLogin()">Continue as Guest</button>
         <p style="margin-top:14px;font-size:11px;color:#94a3b8;">Data stored locally in your browser</p>
     </div>
@@ -696,8 +749,18 @@
             </div>
         </div>
         <div class="modal-field"><label>Suggested Date</label><input type="date" id="singleInviteDate" style="margin:0;"></div>
+        <div class="modal-field">
+            <label>Duration</label>
+            <div class="invite-duration-row" id="singleInviteDurationPicker">
+                <div class="duration-chip" data-minutes="30"  onclick="selectInviteDuration('single',30)">30 min</div>
+                <div class="duration-chip active" data-minutes="60" onclick="selectInviteDuration('single',60)">1 hr</div>
+                <div class="duration-chip" data-minutes="90"  onclick="selectInviteDuration('single',90)">1.5 hr</div>
+                <div class="duration-chip" data-minutes="120" onclick="selectInviteDuration('single',120)">2 hr</div>
+                <div class="duration-chip" data-minutes="180" onclick="selectInviteDuration('single',180)">3 hr</div>
+            </div>
+        </div>
         <div style="display:flex;gap:9px;">
-            <div class="modal-field" style="flex:1;"><label>From</label><input type="time" id="singleInviteStart" value="10:00" style="margin:0;"></div>
+            <div class="modal-field" style="flex:1;"><label>From</label><input type="time" id="singleInviteStart" value="10:00" style="margin:0;" oninput="recalculateInviteEndTime('single')"></div>
             <div class="modal-field" style="flex:1;"><label>To</label>  <input type="time" id="singleInviteEnd"   value="11:00" style="margin:0;"></div>
         </div>
         <div class="modal-field"><label>Message (optional)</label><textarea id="singleInviteNote" rows="2" style="margin:0;" placeholder="Let's meet!"></textarea></div>
@@ -719,8 +782,18 @@
     <div class="modal">
         <h3>👥 Invite Group</h3>
         <div class="modal-field"><label>Suggested Date</label><input type="date" id="groupInviteDate" style="margin:0;"></div>
+        <div class="modal-field">
+            <label>Duration</label>
+            <div class="invite-duration-row" id="groupInviteDurationPicker">
+                <div class="duration-chip" data-minutes="30"  onclick="selectInviteDuration('group',30)">30 min</div>
+                <div class="duration-chip active" data-minutes="60" onclick="selectInviteDuration('group',60)">1 hr</div>
+                <div class="duration-chip" data-minutes="90"  onclick="selectInviteDuration('group',90)">1.5 hr</div>
+                <div class="duration-chip" data-minutes="120" onclick="selectInviteDuration('group',120)">2 hr</div>
+                <div class="duration-chip" data-minutes="180" onclick="selectInviteDuration('group',180)">3 hr</div>
+            </div>
+        </div>
         <div style="display:flex;gap:9px;">
-            <div class="modal-field" style="flex:1;"><label>From</label><input type="time" id="groupInviteStart" value="10:00" style="margin:0;"></div>
+            <div class="modal-field" style="flex:1;"><label>From</label><input type="time" id="groupInviteStart" value="10:00" style="margin:0;" oninput="recalculateInviteEndTime('group')"></div>
             <div class="modal-field" style="flex:1;"><label>To</label>  <input type="time" id="groupInviteEnd"   value="11:00" style="margin:0;"></div>
         </div>
         <div class="modal-field"><label>Message (optional)</label><textarea id="groupInviteNote" rows="2" style="margin:0;" placeholder="You're invited!"></textarea></div>
@@ -821,10 +894,14 @@
 ══════════════════════════════════════ -->
 <div id="bookingConfirmModal" class="modal-overlay hidden" onclick="if(event.target===this) closeModal('bookingConfirmModal')">
     <div class="modal" style="text-align:center;">
-        <div style="font-size:52px;margin-bottom:12px;">🎉</div>
-        <h3 style="margin-bottom:12px;">Booking Confirmed!</h3>
+        <div style="font-size:52px;margin-bottom:12px;" id="bookingConfirmIcon">⏳</div>
+        <h3 style="margin-bottom:12px;" id="bookingConfirmTitle">Booking Request Sent!</h3>
         <div id="bookingConfirmMessage" style="font-size:15px;line-height:1.6;margin-bottom:20px;"></div>
         <div class="modal-actions" style="flex-direction:column;gap:9px;">
+            <button class="whatsapp-btn" id="notifyOwnerBtn" onclick="notifyOwnerViaWhatsApp()" style="display:none;width:100%;justify-content:center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Notify Host via WhatsApp
+            </button>
             <button class="btn-primary" onclick="closeModal('bookingConfirmModal')" style="width:100%;">Done</button>
         </div>
     </div>
@@ -1002,6 +1079,7 @@ function initializeFirebase() {
 
 async function handleFirebaseAuthStateChange(firebaseUser) {
     if (!firebaseUser) return;
+    showLoadingOverlay('Restoring your session…');
     const uid = firebaseUser.uid;
     let userData = Storage.getUsers()[uid];
     if (firestoreDb && !userData) {
@@ -1012,11 +1090,13 @@ async function handleFirebaseAuthStateChange(firebaseUser) {
     currentUser = userData;
     Storage.setCurrentUser(currentUser);
     if (visitedUser && visitedUser.id !== currentUser.id) {
+        hideLoadingOverlay();
         addFriend(visitedUser); renderCalendar();
     } else if (!$('loginScreen').classList.contains('hidden')) {
-        await syncCurrentUserData(); enterApp();
+        enterApp();                   // Enter immediately
+        syncCurrentUserData();        // Sync in background
     } else {
-        await syncCurrentUserData();
+        syncCurrentUserData();
     }
 }
 
@@ -1113,9 +1193,11 @@ async function mergeFriendsFromFirestore(friendSnap) {
 
 async function signInWithGoogle() {
     if (!isFirebaseReady) { showToast('⚠️ OAuth not configured — using guest login'); guestLogin(); return; }
+    showLoadingOverlay('Signing in with Google…');
     try {
         const result       = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
         const firebaseUser = result.user;
+        showLoadingOverlay('Setting up your calendar…');
         let userData       = Storage.getUsers()[firebaseUser.uid];
         if (firestoreDb) {
             try { const doc = await firestoreDb.collection('users').doc(firebaseUser.uid).get(); if (doc.exists) userData = doc.data(); } catch(e) {}
@@ -1123,11 +1205,14 @@ async function signInWithGoogle() {
         if (!userData) userData = buildUserFromFirebase(firebaseUser);
         userData.name = firebaseUser.displayName || 'User';
         if (firebaseUser.photoURL) userData.avatar = firebaseUser.photoURL;
+        saveRememberMePreference();
         persistUser(userData);
         currentUser = userData; Storage.setCurrentUser(currentUser);
-        await syncCurrentUserData(); enterApp();
+        enterApp();                           // Enter immediately — no waiting for sync
         showToast('✅ Signed in as ' + userData.name);
+        syncCurrentUserData();                // Sync Firestore in the background
     } catch (e) {
+        hideLoadingOverlay();
         console.error('Auth error:', e);
         if (e.code === 'auth/popup-closed-by-user') showToast('⚠️ Sign-in cancelled');
         else showToast('❌ Sign-in failed: ' + (e.message || 'Unknown error'));
@@ -1139,15 +1224,17 @@ function guestLogin() {
     const name  = $('guestName').value.trim();
     const phone = getPhoneNumberValue('guestPhone');
     if (!name || !phone) { showToast('❌ Enter name and phone'); return; }
+    saveRememberMePreference();
     createOrUpdateAndLoginUser(name, $('loginCountryCode').value + phone, 'guest');
 }
 
 function createOrUpdateAndLoginUser(name, phone, provider) {
-    const users  = Storage.getUsers();
-    let userId   = Object.entries(users).find(([, u]) => u.phone === phone)?.[0];
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const users           = Storage.getUsers();
+    let userId            = Object.entries(users).find(([, u]) => normalizePhoneNumber(u.phone) === normalizedPhone)?.[0];
     if (!userId) {
         userId = generateUniqueId();
-        const newUser = { id: userId, name, phone, provider, avatar: null, created: new Date().toISOString() };
+        const newUser = { id: userId, name, phone: normalizedPhone, provider, avatar: null, created: new Date().toISOString() };
         persistUser(newUser); currentUser = newUser;
     } else {
         currentUser = users[userId]; currentUser.name = name; persistUser(currentUser);
@@ -1155,8 +1242,22 @@ function createOrUpdateAndLoginUser(name, phone, provider) {
     Storage.setCurrentUser(currentUser); enterApp();
 }
 
+/**
+ * Normalize a phone number to a consistent format (no leading '+', digits only prefix).
+ * Handles: "+96655512345" → "96655512345", "96655512345" → "96655512345"
+ * Google email addresses are returned as-is (cannot be normalized).
+ * @param {string} phone
+ * @returns {string}
+ */
+function normalizePhoneNumber(phone) {
+    if (!phone) return '';
+    const stripped = phone.trim().replace(/^\+/, '');
+    return stripped;
+}
+
 function logout() {
-    currentUser = null; Storage.setCurrentUser(null);
+    currentUser = null;
+    clearRememberedSession();
     if (isFirebaseReady) firebase.auth().signOut();
     location.href = getBaseUrl();
 }
@@ -1329,6 +1430,7 @@ function shareViaWhatsApp() {
 function enterApp() {
     $('loginScreen').classList.add('hidden');
     $('mainApp').classList.remove('hidden');
+    hideLoadingOverlay();
     updateNavBar(); showTab('calendar');
     processPendingCalendarAdd();
     initNotificationReminders();
@@ -1347,15 +1449,17 @@ function processPendingCalendarAdd() {
 
 function enterPublicView(user) {
     visitedUser = user;
-    const saved = Storage.getCurrentUser();
-    if (saved && saved.id && saved.id !== user.id) {
-        const savedData = Storage.getUsers()[saved.id]; if (savedData) { currentUser = savedData; addFriend(user); }
+    const savedSession = Storage.getCurrentUser();
+    if (savedSession && savedSession.id && savedSession.id !== user.id) {
+        const savedUserData = Storage.getUsers()[savedSession.id];
+        if (savedUserData) { currentUser = savedUserData; addFriend(user); }
     }
     $('loginScreen').classList.add('hidden');
+    hideLoadingOverlay();
     $('publicView').classList.remove('hidden');
     $('publicUserName').textContent = user.name;
-    const av = $('publicUserAvatar');
-    av.innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.name.charAt(0).toUpperCase();
+    const avatarEl = $('publicUserAvatar');
+    avatarEl.innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.name.charAt(0).toUpperCase();
     renderCalendar();
 }
 
@@ -1372,12 +1476,20 @@ function getBlocksForDate(dateStr, userId) {
 }
 
 function isHourBusy(dateStr, hour, userId) {
-    return getBookingsForDate(dateStr, userId, 'accepted').some(b => hour >= parseTimeToHours(b.start) && hour < parseTimeToHours(b.end)) ||
-           getBlocksForDate(dateStr, userId).some(b          => hour >= parseTimeToHours(b.start) && hour < parseTimeToHours(b.end));
+    const confirmedOrPendingBookings = [
+        ...getBookingsForDate(dateStr, userId, 'accepted'),
+        ...getBookingsForDate(dateStr, userId, 'pending')
+    ];
+    const manualBlocks = getBlocksForDate(dateStr, userId);
+    return confirmedOrPendingBookings.some(b => hour >= parseTimeToHours(b.start) && hour < parseTimeToHours(b.end)) ||
+           manualBlocks.some(b               => hour >= parseTimeToHours(b.start) && hour < parseTimeToHours(b.end));
 }
 
 function isDayBusy(dateStr, userId) {
-    return getBookingsForDate(dateStr, userId, 'accepted').length > 0 || getBlocksForDate(dateStr, userId).length > 0;
+    const hasAcceptedBooking = getBookingsForDate(dateStr, userId, 'accepted').length > 0;
+    const hasPendingBooking  = getBookingsForDate(dateStr, userId, 'pending').length > 0;
+    const hasManualBlock     = getBlocksForDate(dateStr, userId).length > 0;
+    return hasAcceptedBooking || hasPendingBooking || hasManualBlock;
 }
 
 /* ══════════════════════════════════════
@@ -1620,34 +1732,142 @@ function extractLocalPhoneNumber(fullPhone) {
 }
 
 function submitBooking() {
-    const name      = $('bookingName').value.trim();
-    const phoneNum  = getPhoneNumberValue('bookingPhone');
-    const fullPhone = $('bookingCountryCode').value + phoneNum;
-    const date      = $('bookingDate').value;
-    const start     = $('bookingStart').value;
-    const end       = $('bookingEnd').value;
-    const note      = $('bookingNote').value.trim();
-    const targetUid = bookingTargetUserId || (visitedUser ? visitedUser.id : (currentUser ? currentUser.id : null));
-    if (!name || !phoneNum || !date || !start || !end) { showToast('❌ Fill all fields'); return; }
-    if (start >= end)   { showToast('❌ End after start'); return; }
-    if (!targetUid)     { showToast('❌ Error'); return; }
-    if (isDateInPast(date)) { showToast('⏳ Cannot book a date in the past'); return; }
-    if (isDateToday(date) && start < `${new Date().getHours().toString().padStart(2,'0')}:${new Date().getMinutes().toString().padStart(2,'0')}`) { showToast('⏳ Cannot book a time that has already passed'); return; }
-    if (hasTimeConflict(targetUid, date, start, end)) { showToast('⛔ Slot is busy'); return; }
-    const booking = { id: generateUniqueId(), owner: targetUid, bookerName: name, bookerPhone: fullPhone, date, start, end, note, status: 'accepted', created: new Date().toISOString() };
-    persistBooking(booking); closeModal('bookingModal'); renderCalendar(); showBookingConfirmation(targetUid);
+    const bookerName    = $('bookingName').value.trim();
+    const phoneNumber   = getPhoneNumberValue('bookingPhone');
+    const bookerPhone   = $('bookingCountryCode').value + phoneNumber;
+    const bookingDate   = $('bookingDate').value;
+    const bookingStart  = $('bookingStart').value;
+    const bookingEnd    = $('bookingEnd').value;
+    const bookingNote   = $('bookingNote').value.trim();
+    const targetOwnerId = resolveBookingTargetOwnerId();
+
+    if (!bookerName || !phoneNumber || !bookingDate || !bookingStart || !bookingEnd) { showToast('❌ Fill all fields'); return; }
+    if (bookingStart >= bookingEnd)      { showToast('❌ End time must be after start'); return; }
+    if (!targetOwnerId)                  { showToast('❌ Could not determine booking owner'); return; }
+    if (isDateInPast(bookingDate))       { showToast('⏳ Cannot book a date in the past'); return; }
+    if (isDateToday(bookingDate) && bookingStart < buildCurrentTimeString()) { showToast('⏳ Cannot book a time that has already passed'); return; }
+    if (hasTimeConflict(targetOwnerId, bookingDate, bookingStart, bookingEnd)) { showToast('⛔ That slot is already busy'); return; }
+
+    const newBooking = {
+        id:          generateUniqueId(),
+        owner:       targetOwnerId,
+        bookerId:    currentUser ? currentUser.id : null,   // Store booker's user ID for reliable outgoing lookup
+        bookerName,
+        bookerPhone: normalizePhoneNumber(bookerPhone),     // Normalize before storing
+        date:        bookingDate,
+        start:       bookingStart,
+        end:         bookingEnd,
+        note:        bookingNote,
+        status:      'pending',
+        created:     new Date().toISOString()
+    };
+    persistBooking(newBooking);
+    closeModal('bookingModal');
+    renderCalendar();
+    showBookingConfirmation(newBooking);
 }
 
-function hasTimeConflict(userId, date, start, end) {
-    return Storage.getBookings().some(b => b.status === 'accepted' && b.owner === userId && b.date === date && start < b.end && end > b.start) ||
-           Storage.getBlocks().some(b   => b.owner === userId && b.date === date && start < b.end && end > b.start);
+/**
+ * Determine the owner ID for the current booking context.
+ * Priority: explicit bookingTargetUserId > visitedUser > currentUser (self-booking).
+ * @returns {string|null}
+ */
+function resolveBookingTargetOwnerId() {
+    return bookingTargetUserId || (visitedUser ? visitedUser.id : (currentUser ? currentUser.id : null));
 }
 
-function showBookingConfirmation(targetUserId) {
-    const ownerName = visitedUser ? visitedUser.name : (Storage.getUsers()[targetUserId]?.name || 'the host');
-    const date = $('bookingDate').value, start = $('bookingStart').value, end = $('bookingEnd').value;
-    $('bookingConfirmMessage').innerHTML = `✅ Booking confirmed with <strong>${ownerName}</strong><br><small style="color:var(--text-light);">📅 ${date} &nbsp; 🕐 ${start}–${end}</small>`;
+/**
+ * Build the current time as "HH:MM" string for past-time comparison.
+ * @returns {string}
+ */
+function buildCurrentTimeString() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function hasTimeConflict(userId, date, startTime, endTime) {
+    const busyStatuses    = ['accepted', 'pending'];
+    const bookingConflict = Storage.getBookings().some(b =>
+        busyStatuses.includes(b.status) &&
+        b.owner === userId &&
+        b.date  === date   &&
+        startTime < b.end  &&
+        endTime   > b.start
+    );
+    const blockConflict = Storage.getBlocks().some(b =>
+        b.owner === userId &&
+        b.date  === date   &&
+        startTime < b.end  &&
+        endTime   > b.start
+    );
+    return bookingConflict || blockConflict;
+}
+
+/**
+ * Display the booking confirmation modal after a successful submission.
+ * @param {Object} booking - The newly created booking object
+ */
+function showBookingConfirmation(booking) {
+    const ownerName    = visitedUser ? visitedUser.name : (Storage.getUsers()[booking.owner]?.name || 'the host');
+    const ownerPhone   = Storage.getUsers()[booking.owner]?.phone || null;
+
+    $('bookingConfirmIcon').textContent  = '⏳';
+    $('bookingConfirmTitle').textContent = 'Booking Request Sent!';
+    $('bookingConfirmMessage').innerHTML =
+        `Your request was sent to <strong>${ownerName}</strong>.<br>` +
+        `<small style="color:var(--text-light);">📅 ${booking.date} &nbsp; 🕐 ${booking.start}–${booking.end}</small><br>` +
+        `<small style="color:#f59e0b;margin-top:6px;display:block;">⏳ Waiting for host to accept</small>`;
+
+    // Show WhatsApp notify button only if we have the owner's phone
+    const notifyBtn = $('notifyOwnerBtn');
+    if (ownerPhone && notifyBtn) {
+        notifyBtn.style.display = 'flex';
+        // Store on window for the onclick handler
+        window._pendingNotifyBooking = { booking, ownerPhone, ownerName };
+    } else if (notifyBtn) {
+        notifyBtn.style.display = 'none';
+    }
+
     $('bookingConfirmModal').classList.remove('hidden');
+}
+
+/**
+ * Open WhatsApp to notify the calendar owner of the new booking request.
+ * Called from the "Notify Host via WhatsApp" button in the confirm modal.
+ */
+function notifyOwnerViaWhatsApp() {
+    const pending = window._pendingNotifyBooking;
+    if (!pending) return;
+    const { booking, ownerPhone, ownerName } = pending;
+    const cleanPhone = ownerPhone.replace(/^\+/, '');
+    const message    = buildOwnerNotificationMessage(booking, ownerName);
+    window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message), '_blank');
+    const notifyBtn = $('notifyOwnerBtn');
+    if (notifyBtn) {
+        notifyBtn.textContent = '\u2705 Notification sent!';
+        notifyBtn.style.background = '#22c55e';
+        notifyBtn.onclick = null;
+    }
+    window._pendingNotifyBooking = null;   // BUG-B fix: clean up state
+}
+
+/**
+ * Build the WhatsApp notification message sent to the calendar owner.
+ * @param {Object} booking   - The pending booking object
+ * @param {string} ownerName - Display name of the owner
+ * @returns {string}
+ */
+function buildOwnerNotificationMessage(booking, ownerName) {
+    const calgoLink  = buildShareUrl(booking.owner);
+    const noteSection = booking.note ? '📝 Note: ' + booking.note + '\n' : '';
+    return 'Hi ' + ownerName + '! 👋\n\n' +
+        'You have a new booking request on Calgo:\n\n' +
+        '👤 From: ' + booking.bookerName + '\n' +
+        '📱 Phone: ' + booking.bookerPhone + '\n' +
+        '📅 Date: ' + booking.date + '\n' +
+        '🕐 Time: ' + booking.start + ' \u2013 ' + booking.end + '\n' +
+        noteSection +
+        '\nOpen your calendar to accept or reject:\n👉 ' + calgoLink;
 }
 
 /* ══════════════════════════════════════
@@ -1655,18 +1875,44 @@ function showBookingConfirmation(targetUserId) {
 ══════════════════════════════════════ */
 
 function buildStatusBadgeHtml(status) {
-    const map = { accepted: ['#dcfce7','#166534','✅ Accepted'], rejected: ['#fee2e2','#991b1b','❌ Rejected'] };
-    const [bg, color, label] = map[status] || map.accepted;
-    return `<span class="status-badge" style="background:${bg};color:${color};">${label}</span>`;
+    const statusStyleMap = {
+        pending:  ['#fef3c7', '#92400e', '⏳ Pending'],
+        accepted: ['#dcfce7', '#166534', '✅ Accepted'],
+        rejected: ['#fee2e2', '#991b1b', '❌ Rejected']
+    };
+    const [bgColor, textColor, displayLabel] = statusStyleMap[status] || statusStyleMap.pending;
+    return `<span class="status-badge" style="background:${bgColor};color:${textColor};">${displayLabel}</span>`;
 }
 
 function loadBookings() {
-    const all   = Storage.getBookings();
-    const users = Storage.getUsers();
-    const incoming = all.filter(b => b.owner === currentUser.id).sort((a, b) => new Date(b.created) - new Date(a.created));
-    const outgoing = all.filter(b => b.bookerPhone === currentUser.phone).sort((a, b) => new Date(b.created) - new Date(a.created));
+    const all              = Storage.getBookings();
+    const users            = Storage.getUsers();
+    const currentUserPhone = normalizePhoneNumber(currentUser.phone);
+
+    const incoming = all
+        .filter(b => b.owner === currentUser.id)
+        .sort((a, b) => new Date(b.created) - new Date(a.created));
+
+    const outgoing = all
+        .filter(b => isBookingMadeByCurrentUser(b, currentUserPhone))
+        .sort((a, b) => new Date(b.created) - new Date(a.created));
+
     renderIncomingBookings(incoming);
     renderOutgoingBookings(outgoing, users);
+}
+
+/**
+ * Determine if a booking was made by the currently logged-in user.
+ * Checks by bookerId (reliable) first, then falls back to normalized phone match.
+ * Handles both guest users (phone-based) and Google users (email-based phone field).
+ * @param {Object} booking          - The booking to check
+ * @param {string} normalizedPhone  - Current user's phone, already normalized
+ * @returns {boolean}
+ */
+function isBookingMadeByCurrentUser(booking, normalizedPhone) {
+    if (booking.bookerId && currentUser && booking.bookerId === currentUser.id) return true;
+    if (booking.bookerPhone && normalizePhoneNumber(booking.bookerPhone) === normalizedPhone) return true;
+    return false;
 }
 
 function renderIncomingBookings(bookings) {
@@ -1675,13 +1921,32 @@ function renderIncomingBookings(bookings) {
     el.innerHTML = bookings.map(buildIncomingBookingItemHtml).join('');
 }
 
-function buildIncomingBookingItemHtml(b) {
-    const calBtn = b.status === 'accepted' ? `<button class="booking-status-btn calendar" onclick="addBookingToCalendar('${b.id}')">📅</button>` : '';
-    let actions;
-    if (b.status === 'accepted')  actions = `<button class="booking-status-btn reject" onclick="respondToBooking('${b.id}','rejected')">✕ Cancel</button>`;
-    else if (b.status === 'rejected') actions = `<button class="booking-status-btn accept" onclick="respondToBooking('${b.id}','accepted')">✓ Accept</button>`;
-    else actions = `<button class="booking-status-btn accept" onclick="respondToBooking('${b.id}','accepted')">✓ Accept</button><button class="booking-status-btn reject" onclick="respondToBooking('${b.id}','rejected')">✕ Reject</button>`;
-    return `<div class="booking-item"><div class="booking-info"><div class="booking-name">👤 ${b.bookerName} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${b.bookerPhone}</span></div><div class="booking-meta">📅 ${b.date} 🕐 ${b.start}–${b.end}${b.note ? ' 📝 ' + b.note : ''}</div>${buildStatusBadgeHtml(b.status)}</div><div class="booking-actions">${actions}${calBtn}</div></div>`;
+function buildIncomingBookingItemHtml(booking) {
+    const calendarBtn    = booking.status === 'accepted'
+        ? `<button class="booking-status-btn calendar" onclick="addBookingToCalendar('${booking.id}')">📅</button>`
+        : '';
+    const notifyBtn      = (booking.status === 'accepted' || booking.status === 'rejected')
+        ? `<button class="booking-status-btn" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;" onclick="notifyBookerOfResponse('${booking.id}')">📲 Notify</button>`
+        : '';
+    const itemExtraClass = booking.status === 'pending' ? ' pending-booking' : '';
+    let actionButtons;
+    if (booking.status === 'accepted') {
+        actionButtons = `<button class="booking-status-btn reject" onclick="respondToBooking('${booking.id}','rejected')">✕ Cancel</button>`;
+    } else if (booking.status === 'rejected') {
+        actionButtons = `<button class="booking-status-btn accept" onclick="respondToBooking('${booking.id}','accepted')">✓ Re-accept</button>`;
+    } else {
+        actionButtons =
+            `<button class="booking-status-btn accept" onclick="respondToBooking('${booking.id}','accepted')">✓ Accept</button>` +
+            `<button class="booking-status-btn reject" onclick="respondToBooking('${booking.id}','rejected')">✕ Reject</button>`;
+    }
+    return `<div class="booking-item${itemExtraClass}">` +
+        `<div class="booking-info">` +
+            `<div class="booking-name">👤 ${booking.bookerName} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${booking.bookerPhone}</span></div>` +
+            `<div class="booking-meta">📅 ${booking.date} 🕐 ${booking.start}–${booking.end}${booking.note ? ' 📝 ' + booking.note : ''}</div>` +
+            buildStatusBadgeHtml(booking.status) +
+        `</div>` +
+        `<div class="booking-actions">${actionButtons}${calendarBtn}${notifyBtn}</div>` +
+    `</div>`;
 }
 
 function renderOutgoingBookings(bookings, users) {
@@ -1694,13 +1959,44 @@ function renderOutgoingBookings(bookings, users) {
 }
 
 function respondToBooking(bookingId, newStatus) {
-    const booking = Storage.getBookings().find(b => b.id === bookingId); if (!booking) return;
-    booking.status = newStatus; booking.respondedAt = new Date().toISOString();
-    persistBooking(booking);
-    if (newStatus === 'accepted') syncBookingToCalendarBlock(booking);
-    if (newStatus === 'rejected') removeLinkedCalendarBlock(booking);
-    showToast(newStatus === 'accepted' ? '✅ Accepted' : '❌ Rejected');
-    loadBookings(); renderCalendar();
+    const allBookings   = Storage.getBookings();
+    const targetBooking = allBookings.find(b => b.id === bookingId);
+    if (!targetBooking) return;
+
+    targetBooking.status      = newStatus;
+    targetBooking.respondedAt = new Date().toISOString();
+    persistBooking(targetBooking);
+
+    if (newStatus === 'accepted') syncBookingToCalendarBlock(targetBooking);
+    if (newStatus === 'rejected') removeLinkedCalendarBlock(targetBooking);
+
+    showToast(newStatus === 'accepted' ? '✅ Booking accepted' : '❌ Booking rejected');
+    loadBookings();
+    renderCalendar();
+}
+
+/**
+ * Open WhatsApp to notify the booker of their booking status.
+ * Called manually by the owner via the "📲 Notify" button in Incoming Requests.
+ * @param {string} bookingId - ID of the booking to notify about
+ */
+function notifyBookerOfResponse(bookingId) {
+    const booking = Storage.getBookings().find(b => b.id === bookingId);
+    if (!booking) return;
+    const ownerName  = currentUser ? currentUser.name : 'The host';
+    const cleanPhone = booking.bookerPhone.replace(/^\+/, '');
+    const statusMap  = {
+        accepted: { emoji: '\u2705', word: 'accepted' },
+        rejected: { emoji: '\u274C', word: 'rejected' },
+        pending:  { emoji: '\u23F3', word: 'is still reviewing' }
+    };
+    const { emoji, word } = statusMap[booking.status] || statusMap.pending;
+    const message = emoji + ' Hi ' + booking.bookerName + '!\n\n' +
+        ownerName + ' has ' + word + ' your booking request.\n\n' +
+        '\uD83D\uDCC5 Date: ' + booking.date + '\n' +
+        '\uD83D\uDD50 Time: ' + booking.start + ' \u2013 ' + booking.end + '\n\n' +
+        '\u2014 Calgo';
+    window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message), '_blank');
 }
 
 function syncBookingToCalendarBlock(booking) {
@@ -1730,6 +2026,8 @@ function openSingleInviteModal() {
     $('singleInviteDate').value  = formatDateToISO(new Date());
     $('singleInvitePhone').value = '';
     $('singleInviteNote').value  = '';
+    resetInviteDurationPicker('single');
+    recalculateInviteEndTime('single');
     $('singleInviteModal').classList.remove('hidden');
 }
 
@@ -1775,6 +2073,8 @@ function openGroupInviteModal() {
     $('groupInvitePhone').value = '';
     $('groupInviteNote').value  = '';
     $('groupInviteProgress').classList.add('hidden');
+    resetInviteDurationPicker('group');
+    recalculateInviteEndTime('group');
     renderGroupContactList();
     $('groupInviteModal').classList.remove('hidden');
 }
@@ -1871,6 +2171,7 @@ function handleEventUrl(params) {
             </div>
             <div id="calOpts" style="display:none;margin-top:15px;">
                 <p style="margin-bottom:10px;font-size:14px;color:#64748b;">Choose your calendar:</p>
+                <button onclick="addInvitationToCalgo('${encodeURIComponent(title)}','${date}','${start}','${end || start}')" style="display:block;width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;border:none;cursor:pointer;font-size:15px;">📅 Add to Calgo</button>
                 <a href="${gcal}" target="_blank" style="display:block;background:#4285F4;color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;">Google Calendar</a>
                 <a href="${icsUrl}" download="meeting.ics" style="display:block;background:#1e293b;color:white;text-decoration:none;padding:14px;border-radius:12px;font-weight:bold;margin-bottom:10px;">Apple / Outlook</a>
                 <a href="https://king10asd.github.io/dayvo/" style="display:block;margin-top:20px;color:#6366f1;font-weight:bold;text-decoration:none;font-size:14px;">Try Calgo!</a>
@@ -1921,11 +2222,22 @@ async function init() {
         Storage.setRaw('pending_add', { title: params.get('title'), dt: params.get('dt'), st: params.get('st'), en: params.get('en') });
         window.history.replaceState({}, '', getBaseUrl());
     } else if (isEventLink) {
+        // Event invite page — no loading overlay needed, renders its own UI
         handleEventUrl(params); return;
     }
 
-    if (targetUid) await initWithTargetUser(targetUid);
-    else initFromSavedSession();
+    showLoadingOverlay('Loading Calgo…');
+
+    if (targetUid) {
+        await initWithTargetUser(targetUid);
+    } else if (tryAutoLoginFromRememberedSession()) {
+        // Remembered session found — restore it directly
+        initFromSavedSession();
+    } else {
+        // No remembered session — show login screen
+        hideLoadingOverlay();
+        $('loginScreen').classList.remove('hidden');
+    }
 }
 
 async function initWithTargetUser(targetUid) {
@@ -1954,9 +2266,15 @@ async function initWithTargetUser(targetUid) {
 
 function initFromSavedSession() {
     const saved = Storage.getCurrentUser();
-    if (!saved || !saved.id) return;
+    if (!saved || !saved.id) { hideLoadingOverlay(); return; }
     const users = Storage.getUsers();
-    if (users[saved.id]) { currentUser = users[saved.id]; enterApp(); syncCurrentUserData(); }
+    if (users[saved.id]) {
+        currentUser = users[saved.id];
+        enterApp();
+        syncCurrentUserData();
+    } else {
+        hideLoadingOverlay();
+    }
 }
 
 
@@ -2306,6 +2624,177 @@ function initNotificationReminders() {
     renderNotificationPermissionBadge();
     if ('Notification' in window && Notification.permission === 'granted') {
         startBookingReminderLoop();
+    }
+}
+
+
+/* ══════════════════════════════════════
+   FEATURE: LOADING OVERLAY
+   Shows a branded spinner while auth/data loads.
+   Hides itself with a fade when the app is ready.
+══════════════════════════════════════ */
+
+/**
+ * Show the loading overlay with a custom status message.
+ * @param {string} message - Text shown below the spinner
+ */
+function showLoadingOverlay(message) {
+    const overlayEl  = $('loadingOverlay');
+    const messageEl  = $('loadingMessage');
+    if (!overlayEl) return;
+    if (messageEl) messageEl.textContent = message || 'Loading…';
+    overlayEl.classList.remove('fade-out');
+    overlayEl.style.display = 'flex';
+}
+
+/**
+ * Hide the loading overlay with a smooth fade-out animation.
+ * Removes it from the DOM flow after the transition completes.
+ */
+function hideLoadingOverlay() {
+    const overlayEl = $('loadingOverlay');
+    if (!overlayEl) return;
+    overlayEl.classList.add('fade-out');
+    setTimeout(() => { overlayEl.style.display = 'none'; }, 500);
+}
+
+
+/* ══════════════════════════════════════
+   FEATURE: REMEMBER LOGIN
+   Persists the user session across visits.
+   Controlled by the "Remember me" checkbox on the login screen.
+══════════════════════════════════════ */
+
+const REMEMBER_ME_STORAGE_KEY = 'remember_me';
+
+/** Returns true if the user opted in to being remembered */
+function isRememberMeEnabled() {
+    return Storage.getRaw(REMEMBER_ME_STORAGE_KEY) === true;
+}
+
+/** Save the remember-me preference from the login checkbox */
+function saveRememberMePreference() {
+    const checkboxEl = $('rememberMeCheckbox');
+    const isChecked  = checkboxEl ? checkboxEl.checked : true;
+    Storage.setRaw(REMEMBER_ME_STORAGE_KEY, isChecked);
+}
+
+/**
+ * Check on app start if a remembered session exists and auto-login.
+ * Returns true if a valid remembered session was found and restored.
+ * @returns {boolean}
+ */
+function tryAutoLoginFromRememberedSession() {
+    if (!isRememberMeEnabled()) return false;
+    const savedUser = Storage.getCurrentUser();
+    if (!savedUser || !savedUser.id) return false;
+    const allUsers = Storage.getUsers();
+    if (!allUsers[savedUser.id]) return false;
+    return true;
+}
+
+/** Clear the remembered session on logout */
+function clearRememberedSession() {
+    Storage.setCurrentUser(null);
+    Storage.setRaw(REMEMBER_ME_STORAGE_KEY, false);
+}
+
+
+/* ══════════════════════════════════════
+   FEATURE: INVITE DURATION PICKER
+   Shared duration chip logic for both
+   single-invite and group-invite modals.
+══════════════════════════════════════ */
+
+/** Currently selected invite durations per modal type */
+const inviteSelectedDurationMinutes = { single: 60, group: 60 };
+
+/**
+ * Select a duration chip for a given invite modal type.
+ * Updates the active chip and recalculates the end time.
+ * @param {'single'|'group'} modalType
+ * @param {number} durationMinutes
+ */
+function selectInviteDuration(modalType, durationMinutes) {
+    inviteSelectedDurationMinutes[modalType] = durationMinutes;
+
+    const pickerId = modalType === 'single' ? 'singleInviteDurationPicker' : 'groupInviteDurationPicker';
+    document.querySelectorAll(`#${pickerId} .duration-chip`).forEach(chip => {
+        chip.classList.toggle('active', parseInt(chip.dataset.minutes) === durationMinutes);
+    });
+
+    recalculateInviteEndTime(modalType);
+}
+
+/**
+ * Recalculate the end time field based on start time + selected duration.
+ * @param {'single'|'group'} modalType
+ */
+function recalculateInviteEndTime(modalType) {
+    const startInputId = modalType === 'single' ? 'singleInviteStart' : 'groupInviteStart';
+    const endInputId   = modalType === 'single' ? 'singleInviteEnd'   : 'groupInviteEnd';
+    const startTime    = $(startInputId).value;
+    if (!startTime) return;
+
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const totalStartMinutes        = startHour * 60 + startMinute;
+    const totalEndMinutes          = totalStartMinutes + inviteSelectedDurationMinutes[modalType];
+    const endHour                  = Math.floor(totalEndMinutes / 60) % 24;
+    const endMinute                = totalEndMinutes % 60;
+    $(endInputId).value = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+}
+
+/** Reset invite duration picker for a modal type back to default (60 min) */
+function resetInviteDurationPicker(modalType) {
+    inviteSelectedDurationMinutes[modalType] = 60;
+    const pickerId = modalType === 'single' ? 'singleInviteDurationPicker' : 'groupInviteDurationPicker';
+    document.querySelectorAll(`#${pickerId} .duration-chip`).forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.minutes === '60');
+    });
+}
+
+
+/* ══════════════════════════════════════
+   FEATURE: ADD INVITATION TO CALGO
+   Handles the "Add to Calgo" button on the
+   invitation landing page.
+══════════════════════════════════════ */
+
+/**
+ * Add an invitation event directly to the user's Calgo calendar.
+ * If the user is logged in: adds the block immediately.
+ * If not logged in: saves as pending and redirects to login.
+ * @param {string} encodedTitle - URL-encoded event title
+ * @param {string} dateStr      - YYYY-MM-DD
+ * @param {string} startTime    - HH:MM
+ * @param {string} endTime      - HH:MM
+ */
+function addInvitationToCalgo(encodedTitle, dateStr, startTime, endTime) {
+    const decodedTitle = decodeURIComponent(encodedTitle);
+
+    // Save as pending — works for both logged-in and logged-out users
+    Storage.setRaw('pending_add', {
+        title: decodedTitle,
+        dt:    dateStr,
+        st:    startTime,
+        en:    endTime || startTime
+    });
+
+    const savedUser = Storage.getCurrentUser();
+    const allUsers  = Storage.getUsers();
+    const isLoggedIn = savedUser && savedUser.id && allUsers[savedUser.id] && isRememberMeEnabled();
+
+    if (isLoggedIn) {
+        // Redirect to the app — processPendingCalendarAdd() will handle it after enterApp()
+        window.location.href = getBaseUrl();
+    } else {
+        // Show feedback then redirect to login
+        const confirmBtnEl = document.querySelector('#calOpts button');
+        if (confirmBtnEl) {
+            confirmBtnEl.textContent = '✅ Saved! Redirecting to login…';
+            confirmBtnEl.style.background = '#22c55e';
+        }
+        setTimeout(() => { window.location.href = getBaseUrl(); }, 1200);
     }
 }
 
