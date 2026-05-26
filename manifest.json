@@ -1,7 +1,7 @@
 {
-    "name": "Dayvo",
-    "short_name": "Dayvo",
-    "description": "Share your calendar. Book with friends.",
+    "name": "Calgo",
+    "short_name": "Calgo",
+    "description": "Share your calendar. Book with friends!",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#f8fafc",
