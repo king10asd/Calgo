@@ -15,8 +15,6 @@
     <link rel="apple-touch-icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='68' text-anchor='middle' font-size='50'>📅</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -276,6 +274,17 @@
         .friend-btn-join   { background: #fef3c7; color: #92400e; }
         .friend-btn-remove { background: #fee2e2; color: var(--danger); }
         .no-friends-message { color: var(--text-light); font-size: 13px; text-align: center; padding: 14px; background: #f8fafc; border-radius: 14px; border: 2px dashed var(--border); }
+        /* ── RECENT CONTACTS ── */
+        .recent-contacts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+        .recent-contacts-title  { font-size: 13px; font-weight: 700; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+        .recent-contacts-toggle { font-size: 11px; color: var(--primary); background: none; border: none; cursor: pointer; font-weight: 700; padding: 2px 6px; width: auto; margin: 0; }
+        .recent-chip { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px; border-radius: 14px; border: 2px solid transparent; min-width: 70px; transition: 0.2s; }
+        .recent-chip:hover { background: #f8fafc; border-color: var(--border); }
+        .recent-chip-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #64748b); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; }
+        .recent-chip-name { font-size: 11px; font-weight: 700; text-align: center; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .recent-chip-tag  { font-size: 9px; color: var(--text-light); background: #f1f5f9; border-radius: 5px; padding: 1px 5px; font-weight: 600; text-align: center; }
+        .recent-add-btn   { font-size: 10px; padding: 3px 8px; border-radius: 7px; border: none; cursor: pointer; font-weight: 700; margin: 1px 0 0; width: auto; background: #dcfce7; color: #16a34a; transition: 0.15s; }
+        .recent-add-btn:hover { background: #bbf7d0; }
 
         /* ── SHARE / QR BOX ── */
         .share-box { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius: 18px; padding: 22px; text-align: center; border: 2px dashed var(--border); }
@@ -306,6 +315,21 @@
         .print-preview-box { background: #f8fafc; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px; display: flex; justify-content: center; align-items: center; min-height: 180px; }
         .print-preview-box img { max-width: 100%; border-radius: 10px; display: block; }
         .print-preview-box .preview-loading { color: var(--text-light); font-size: 13px; padding: 30px; }
+        /* ── MESSAGE TEMPLATES ── */
+        .template-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; background: #f8fafc; border-radius: 13px; border: 1px solid var(--border); margin-bottom: 7px; gap: 10px; }
+        .template-row-label { font-size: 13px; font-weight: 700; flex: 1; }
+        .template-row-sublabel { font-size: 11px; color: var(--text-light); font-weight: 400; margin-top: 1px; }
+        .template-edit-btn { width: auto; margin: 0; padding: 6px 14px; font-size: 12px; border-radius: 9px; background: #eef2ff; color: var(--primary); border: none; cursor: pointer; font-weight: 700; }
+        .template-edit-btn:hover { background: #e0e7ff; }
+        .template-lang-toggle { display: flex; gap: 5px; margin-bottom: 12px; }
+        .template-lang-btn { flex: 1; padding: 8px; margin: 0; border-radius: 10px; font-size: 13px; font-weight: 700; border: 2px solid var(--border); background: #f8fafc; color: var(--text-light); cursor: pointer; }
+        .template-lang-btn.active { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
+        .template-variable-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 8px 0 4px; }
+        .template-var-chip { padding: 3px 10px; border-radius: 18px; font-size: 11px; font-weight: 700; border: 1px solid var(--border); background: #f8fafc; color: var(--text); cursor: pointer; transition: 0.15s; font-family: monospace; }
+        .template-var-chip:hover { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
+        .template-var-chip.required { border-color: #fca5a5; background: #fef2f2; color: var(--danger); }
+        .template-var-chip.required:hover { border-color: var(--danger); background: #fee2e2; }
+        .template-preview-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.7; white-space: pre-wrap; max-height: 160px; overflow-y: auto; color: var(--text); margin-top: 4px; word-break: break-word; }
 
         /* ── DAY VIEW ── */
         .day-grid { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
@@ -449,6 +473,17 @@
         .notif-badge.granted  { background: #dcfce7; color: #16a34a; }
         .notif-badge.denied   { background: #fee2e2; color: #dc2626; }
         .notif-badge.default  { background: #eef2ff; color: var(--primary); border: 2px solid var(--border); }
+        /* ── REMINDER SETTINGS ── */
+        .reminder-chips-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 4px; }
+        .reminder-chip { padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 2px solid var(--border); background: #f8fafc; color: var(--text-light); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .reminder-chip:hover  { border-color: var(--primary); color: var(--primary); }
+        .reminder-chip.active { border-color: var(--primary); background: #eef2ff; color: var(--primary); }
+        .reminder-toggle-row { display: flex; align-items: center; gap: 9px; margin: 10px 0 4px; cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; }
+        .reminder-toggle-row input[type="checkbox"] { width: 17px; height: 17px; margin: 0; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .reminder-sub-setting { background: #f8fafc; border-radius: 12px; border: 1px solid var(--border); padding: 10px 13px; margin: 4px 0 8px; font-size: 12px; color: var(--text-light); }
+        .reminder-ignore-btn { font-size: 10px; padding: 3px 8px; border-radius: 7px; border: none; cursor: pointer; font-weight: 700; margin: 0; width: auto; background: #f1f5f9; color: var(--text-light); transition: 0.15s; }
+        .reminder-ignore-btn:hover { background: #fee2e2; color: var(--danger); }
+        .reminder-ignore-btn.ignored { background: #fef3c7; color: #92400e; }
 
         /* ── LOADING OVERLAY ── */
         .loading-overlay {
@@ -661,14 +696,13 @@
                         <p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:5px;">Contacts on Calgo are added instantly. Others can be invited to join via WhatsApp.</p>
                     </div>
                 </div>
+                <!-- Recent Contacts — rendered by renderRecentContactsSection() -->
+                <div id="recentContactsSection"></div>
                 <div id="friendsList"></div>
             </div>
 
-            <!-- Notification Permissions -->
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-                <div style="font-size:14px;font-weight:700;">🔔 Booking Reminders</div>
-                <div id="notifPermissionBadge" class="notif-badge default" onclick="requestNotificationPermission()" title="Click to enable booking reminders">Enable Notifications</div>
-            </div>
+            <!-- Reminder Settings — rendered by renderReminderSettingsSection() -->
+            <div id="reminderSettingsSection"></div>
 
             <div class="separator"></div>
 
@@ -686,6 +720,11 @@
                     <button class="btn-primary" onclick="copyShareLink()" style="width:auto;padding:11px 18px;">📋 Copy</button>
                 </div>
             </div>
+
+            <!-- Message Templates Section — rendered by renderMessageTemplatesSection() -->
+            <div class="separator"></div>
+            <div id="messageTemplatesSection"></div>
+
         </div>
     </div>
 
@@ -1103,9 +1142,109 @@
     </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     MODAL: Message Template Editor
+══════════════════════════════════════ -->
+<div id="templateEditorModal" class="modal-overlay hidden" onclick="if(event.target===this) closeModal('templateEditorModal')">
+    <div class="modal">
+        <h3 id="templateEditorTitle">✉️ Edit Template</h3>
+
+        <!-- Language toggle -->
+        <div class="template-lang-toggle">
+            <button class="template-lang-btn active" id="templateLangBtnEn" onclick="switchTemplateEditorLanguage('en')">🇬🇧 English</button>
+            <button class="template-lang-btn"        id="templateLangBtnAr" onclick="switchTemplateEditorLanguage('ar')">🇸🇦 العربية</button>
+        </div>
+
+        <!-- Textarea -->
+        <div class="modal-field">
+            <label>Template Text <span style="font-size:10px;color:var(--text-light);">(click a variable below to insert it)</span></label>
+            <textarea id="templateEditorTextarea" rows="7" style="margin:0;font-size:13px;line-height:1.6;font-family:inherit;"
+                oninput="updateTemplatePreview()"></textarea>
+        </div>
+
+        <!-- Variable chips -->
+        <div id="templateVariableChips" class="template-variable-chips"></div>
+        <div style="font-size:10px;color:var(--danger);margin-bottom:8px;">
+            <span style="background:#fef2f2;border:1px solid #fca5a5;border-radius:5px;padding:1px 6px;font-family:monospace;">red</span>
+            = required variable — do not remove
+        </div>
+
+        <!-- Live preview -->
+        <div class="modal-field">
+            <label>Preview</label>
+            <div id="templatePreviewBox" class="template-preview-box"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-primary"    onclick="saveTemplate()"               style="flex:2;">💾 Save</button>
+            <button class="btn-cancel"     onclick="resetTemplateToDefault()"     style="flex:1;background:#fef3c7;color:#92400e;">🔄 Reset</button>
+            <button class="btn-cancel"     onclick="closeModal('templateEditorModal')" style="flex:1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
+/* ══════════════════════════════════════
+   PERFORMANCE UTILITIES
+   Lazy-loading, render caching, data versioning.
+══════════════════════════════════════ */
+
+/**
+ * Dynamically load an external script by URL.
+ * Resolves immediately if the script is already loaded.
+ * @param {string} url
+ * @returns {Promise<void>}
+ */
+function loadExternalScript(url) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+        const scriptEl    = document.createElement('script');
+        scriptEl.src      = url;
+        scriptEl.onload   = resolve;
+        scriptEl.onerror  = () => reject(new Error('Failed to load: ' + url));
+        document.head.appendChild(scriptEl);
+    });
+}
+
+/**
+ * Ensure html2canvas is loaded before using it.
+ * Only fetches the library (210KB) the first time Print/Save is used.
+ */
+async function ensureHtml2CanvasLoaded() {
+    if (typeof html2canvas === 'function') return;
+    await loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+}
+
+/**
+ * Ensure Html5Qrcode is loaded before using it.
+ * Only fetches the library (200KB) the first time QR scanning is used.
+ */
+async function ensureHtml5QrCodeLoaded() {
+    if (typeof Html5Qrcode !== 'undefined') return;
+    await loadExternalScript('https://unpkg.com/html5-qrcode');
+}
+
+/**
+ * Increment the data version counter.
+ * Called after any mutation to blocks or bookings so the
+ * calendar render cache is automatically invalidated.
+ */
+function bumpCalendarDataVersion() {
+    calendarDataVersion++;
+}
+
+/**
+ * Build a unique signature for the current calendar render state.
+ * If this matches the last rendered signature, the render is skipped.
+ * @returns {string}
+ */
+function buildCalendarRenderSignature() {
+    const userId = visitedUser ? visitedUser.id : (currentUser?.id || '');
+    return `${currentView}_${formatDateToISO(currentDate)}_${userId}_v${calendarDataVersion}`;
+}
+
 /* ══════════════════════════════════════
    STORAGE MODULE
    Wraps localStorage with a consistent key prefix and JSON serialization.
@@ -1133,9 +1272,15 @@ let currentUser         = null;   // Logged-in user object
 let visitedUser         = null;   // Profile being viewed publicly
 let currentView         = 'month';
 let currentDate         = new Date();
-let groupContactList          = [];
-let bookingTargetUserId       = null;
+let groupContactList    = [];
+let bookingTargetUserId = null;
 let singleInviteRecipientName = null;  // Stores name picked via contact picker for personalized greeting
+
+/* ── PERFORMANCE STATE ── */
+let calendarDataVersion           = 0;      // Bumped on every data mutation — drives render cache
+let calendarLastRenderSignature   = null;   // Last rendered signature — skip if unchanged
+let qrCodeGeneratedForUserId      = null;   // Prevents QR regeneration on every profile open
+let recentContactsSectionExpanded = true;
 
 /* ══════════════════════════════════════
    DOM UTILITIES
@@ -1233,7 +1378,7 @@ function initializeFirebase() {
 async function handleFirebaseAuthStateChange(firebaseUser) {
     if (!firebaseUser) return;
     if ($('mainApp').classList.contains('hidden')) {
-    showLoadingOverlay('Restoring your session…');
+        showLoadingOverlay('Restoring your session…');
     }
     const uid = firebaseUser.uid;
     let userData = Storage.getUsers()[uid];
@@ -1242,16 +1387,21 @@ async function handleFirebaseAuthStateChange(firebaseUser) {
     }
     if (!userData) userData = buildUserFromFirebase(firebaseUser);
     persistUser(userData);
+
+    // Set currentUser BEFORE any friend operations so persistFriendEntry works correctly
     currentUser = userData;
     Storage.setCurrentUser(currentUser);
+
     if (visitedUser && visitedUser.id !== currentUser.id) {
         hideLoadingOverlay();
-        addFriend(visitedUser); renderCalendar();
+        // currentUser is confirmed set — safe to add friend now
+        addFriend(visitedUser);
+        renderCalendar();
     } else if (!$('loginScreen').classList.contains('hidden')) {
-        enterApp();                   // Enter immediately
-        syncCurrentUserData();        // Sync in background
+        enterApp();
+        syncCurrentUserData();
     } else {
-        hideLoadingOverlay();   // App already loaded — dismiss any lingering overlay
+        hideLoadingOverlay();
         syncCurrentUserData();
     }
 }
@@ -1280,6 +1430,7 @@ function persistBooking(booking) {
     const idx = bookings.findIndex(b => b.id === booking.id);
     if (idx >= 0) bookings[idx] = booking; else bookings.push(booking);
     Storage.setBookings(bookings);
+    bumpCalendarDataVersion();
     if (firestoreDb) {
         firestoreDb.collection('bookings').doc(booking.id).set(booking).catch(err => {
             console.error('Firestore booking write failed:', err);
@@ -1295,11 +1446,13 @@ function persistBlock(block) {
     const idx = blocks.findIndex(b => b.id === block.id);
     if (idx >= 0) blocks[idx] = block; else blocks.push(block);
     Storage.setBlocks(blocks);
+    bumpCalendarDataVersion();
     if (firestoreDb) firestoreDb.collection('blocks').doc(block.id).set(block).catch(console.error);
 }
 
 function deleteBlock(blockId) {
     Storage.setBlocks(Storage.getBlocks().filter(b => b.id !== blockId));
+    bumpCalendarDataVersion();
     if (firestoreDb) firestoreDb.collection('blocks').doc(blockId).delete().catch(console.error);
 }
 
@@ -1319,6 +1472,7 @@ async function syncCurrentUserData() {
         mergeFirestoreBookings(bookingSnap, outgoingDocs);
         mergeFirestoreBlocks(blockSnap);
         await mergeFriendsFromFirestore(friendSnap);
+        bumpCalendarDataVersion(); // Invalidate render cache after any Firestore data merge
         if (currentView) renderCalendar();
         if ($('bookingsTab') && !$('bookingsTab').classList.contains('hidden')) loadBookings();
         if ($('profileTab')  && !$('profileTab').classList.contains('hidden'))  renderFriends();
@@ -1376,13 +1530,45 @@ function mergeFirestoreBlocks(blockSnap) {
 
 async function mergeFriendsFromFirestore(friendSnap) {
     if (!friendSnap.exists) return;
-    const friendList = friendSnap.data().list || [];
-    Storage.setFriends(currentUser.id, friendList);
+    const firestoreFriendList = friendSnap.data().list || [];
+
+    // Merge cloud list with local list — keep the richer entry per id.
+    // "Richer" means the entry with more fields (new format beats old format).
+    const localFriendList = Storage.getFriends(currentUser.id);
+    const mergedMap       = new Map();
+
+    // Add local entries first
+    localFriendList.forEach(entry => mergedMap.set(entry.id, entry));
+
+    // Merge Firestore entries — only overwrite if the cloud entry is richer
+    firestoreFriendList.forEach(cloudEntry => {
+        const localEntry = mergedMap.get(cloudEntry.id);
+        if (!localEntry) {
+            mergedMap.set(cloudEntry.id, cloudEntry);
+        } else {
+            // Keep whichever has more fields (new format has name, phone, calgoId)
+            const localFieldCount = Object.keys(localEntry).length;
+            const cloudFieldCount = Object.keys(cloudEntry).length;
+            if (cloudFieldCount > localFieldCount) {
+                mergedMap.set(cloudEntry.id, cloudEntry);
+            }
+        }
+    });
+
+    const mergedList = Array.from(mergedMap.values());
+    Storage.setFriends(currentUser.id, mergedList);
+
+    // Fetch any Calgo user data not yet in local store
     const users = Storage.getUsers();
-    for (const friend of friendList) {
-        if (!users[friend.id]) {
-            const doc = await firestoreDb.collection('users').doc(friend.id).get();
-            if (doc.exists) users[friend.id] = doc.data();
+    for (const friend of mergedList) {
+        const lookupId = friend.calgoId || friend.id;
+        if (lookupId && !lookupId.startsWith('contact_') && !users[lookupId]) {
+            try {
+                const doc = await firestoreDb.collection('users').doc(lookupId).get();
+                if (doc.exists) users[lookupId] = doc.data();
+            } catch (fetchError) {
+                console.error('Friend user fetch error:', fetchError);
+            }
         }
     }
     Storage.setUsers(users);
@@ -1494,6 +1680,214 @@ function handleAvatarUpload(inputEl) {
 }
 
 /* ══════════════════════════════════════
+   FEATURE: RECENT CONTACTS
+   Shows last 8 people you interacted with above the friends list.
+   Sources: outgoing invite log (localStorage) + incoming booking history.
+   Excludes existing friends and current user.
+══════════════════════════════════════ */
+
+/** Max number of recent contacts to display in the section */
+const RECENT_CONTACTS_MAX_DISPLAY = 8;
+
+/** Max number of invite log entries to keep in localStorage */
+const RECENT_CONTACTS_LOG_MAX     = 30;
+
+/**
+ * Load the outgoing invite log from localStorage.
+ * @returns {Array<{phone, name, interaction, lastAt}>}
+ */
+function loadRecentContactsLog() {
+    return Storage.getRaw('recent_contacts') || [];
+}
+
+/**
+ * Save the outgoing invite log to localStorage.
+ * @param {Array} logEntries
+ */
+function saveRecentContactsLog(logEntries) {
+    Storage.setRaw('recent_contacts', logEntries);
+}
+
+/**
+ * Record a contact interaction in the outgoing invite log.
+ * If the phone already exists, updates the timestamp and name.
+ * Caps the log at RECENT_CONTACTS_LOG_MAX entries (removes oldest).
+ * @param {string} phone       - Digits-only or full phone string
+ * @param {string} name        - Contact display name (may be empty)
+ * @param {string} interaction - 'invited'
+ */
+function logRecentContact(phone, name, interaction) {
+    if (!phone || !currentUser) return;
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (!digitsOnly || digitsOnly.length < 5) return;
+
+    const log         = loadRecentContactsLog();
+    const existingIdx = log.findIndex(entry => entry.phone.replace(/\D/g, '') === digitsOnly);
+
+    const updatedEntry = {
+        phone:       digitsOnly,
+        name:        name || '',
+        interaction,
+        lastAt:      new Date().toISOString()
+    };
+
+    if (existingIdx >= 0) {
+        // Update in place — keep richer name if new one is empty
+        if (!name && log[existingIdx].name) updatedEntry.name = log[existingIdx].name;
+        log[existingIdx] = updatedEntry;
+    } else {
+        log.unshift(updatedEntry);
+        // Trim to max size
+        if (log.length > RECENT_CONTACTS_LOG_MAX) log.splice(RECENT_CONTACTS_LOG_MAX);
+    }
+
+    saveRecentContactsLog(log);
+}
+
+/**
+ * Build the merged, deduplicated, filtered list of recent contacts for display.
+ * Combines the outgoing invite log with incoming booking history.
+ * Excludes current user and anyone already in the friends list.
+ * @returns {Array<{phone, name, interaction, lastAt}>}
+ */
+function getRecentContactsForDisplay() {
+    if (!currentUser) return [];
+
+    const existingFriends = getResolvedFriends();
+    const friendPhones    = new Set(
+        existingFriends.map(f => (f.phone || '').replace(/\D/g, '')).filter(Boolean)
+    );
+    const myDigits = (currentUser.phone || '').replace(/\D/g, '');
+
+    // Start with outgoing invite log
+    const contactMap = new Map();
+
+    loadRecentContactsLog().forEach(entry => {
+        const digits = entry.phone.replace(/\D/g, '');
+        if (!digits || digits === myDigits) return;
+        contactMap.set(digits, { ...entry, phone: digits });
+    });
+
+    // Merge incoming bookings (people who booked you)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    Storage.getBookings()
+        .filter(b => b.owner === currentUser.id && b.bookerPhone && new Date(b.created) >= thirtyDaysAgo)
+        .forEach(booking => {
+            const digits = normalizePhoneNumber(booking.bookerPhone).replace(/\D/g, '');
+            if (!digits || digits === myDigits) return;
+            const existing = contactMap.get(digits);
+            const bookingDate = new Date(booking.created).toISOString();
+            if (!existing || bookingDate > existing.lastAt) {
+                contactMap.set(digits, {
+                    phone:       digits,
+                    name:        existing?.name || booking.bookerName || '',
+                    interaction: 'booked_you',
+                    lastAt:      bookingDate
+                });
+            }
+        });
+
+    // Filter out existing friends, sort by most recent, cap at display max
+    return Array.from(contactMap.values())
+        .filter(c => !friendPhones.has(c.phone))
+        .sort((a, b) => new Date(b.lastAt) - new Date(a.lastAt))
+        .slice(0, RECENT_CONTACTS_MAX_DISPLAY);
+}
+
+/**
+ * Render the Recent Contacts section above the friends list.
+ * Shows a collapsible list of recent interactions with "+ Friend" buttons.
+ */
+function renderRecentContactsSection() {
+    const container = $('recentContactsSection');
+    if (!container) return;
+
+    const recentContacts = getRecentContactsForDisplay();
+
+    if (!recentContacts.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const toggleLabel   = recentContactsSectionExpanded ? '▲ Hide' : '▼ Show';
+    const chipsHtml     = recentContactsSectionExpanded
+        ? `<div class="friends-scroll">${recentContacts.map(renderRecentContactChip).join('')}</div>`
+        : '';
+
+    container.innerHTML = `
+        <div class="recent-contacts-header">
+            <div class="recent-contacts-title">🕐 Recent (${recentContacts.length})</div>
+            <button class="recent-contacts-toggle" onclick="toggleRecentContactsSection()">${toggleLabel}</button>
+        </div>
+        ${chipsHtml}`;
+}
+
+/**
+ * Toggle the recent contacts section expanded/collapsed state and re-render.
+ */
+function toggleRecentContactsSection() {
+    recentContactsSectionExpanded = !recentContactsSectionExpanded;
+    renderRecentContactsSection();
+}
+
+/**
+ * Render a single recent contact chip.
+ * Shows avatar, name/phone, interaction tag, and an "+ Friend" button.
+ * @param {Object} contact
+ * @returns {string} HTML string
+ */
+function renderRecentContactChip(contact) {
+    const displayName   = contact.name || ('+' + contact.phone);
+    const avatarContent = contact.name ? contact.name.charAt(0).toUpperCase() : '📱';
+    const tagLabel      = contact.interaction === 'booked_you' ? '📅 Booked you' : '📨 Invited';
+    const safePhone     = contact.phone.replace(/'/g, "\\'");
+    const safeName      = (contact.name || '').replace(/'/g, "\\'");
+
+    return `<div class="recent-chip">
+        <div class="recent-chip-avatar">${avatarContent}</div>
+        <div class="recent-chip-name" title="${displayName}">${displayName}</div>
+        <div class="recent-chip-tag">${tagLabel}</div>
+        <button class="recent-add-btn" onclick="addRecentContactAsFriend('${safePhone}','${safeName}')">+ Friend</button>
+    </div>`;
+}
+
+/**
+ * Add a recent contact to the friends list.
+ * If a matching Calgo user is found locally by phone, adds as a Calgo friend.
+ * Otherwise adds as a non-Calgo contact entry.
+ * Re-renders both sections on completion.
+ * @param {string} phone - Digits-only phone
+ * @param {string} name  - Display name
+ */
+function addRecentContactAsFriend(phone, name) {
+    if (!currentUser) return;
+
+    const allLocalUsers = Storage.getUsers();
+    const matchingUser  = Object.values(allLocalUsers).find(u =>
+        u.phone && u.phone.replace(/\D/g, '') === phone
+    );
+
+    if (matchingUser) {
+        addFriend(matchingUser);
+    } else {
+        persistFriendEntry({
+            id:      'contact_' + phone,
+            name:    name || phone,
+            phone,
+            avatar:  null,
+            calgoId: null,
+            addedAt: new Date().toISOString()
+        });
+    }
+
+    renderRecentContactsSection();
+    renderFriends();
+    showToast(`✅ ${name || phone} added to friends!`);
+}
+
+/* ══════════════════════════════════════
    FRIENDS — CONTACT IMPORT
    Imports contacts directly from the device without requiring a Calgo account.
    Contacts already on Calgo get calgoId set; others get calgoId: null and
@@ -1582,7 +1976,35 @@ function buildFriendEntryForContact(contactName, rawPhone) {
 function persistFriendEntry(friendEntry) {
     if (!currentUser) return false;
     const existingFriends = Storage.getFriends(currentUser.id);
+
+    // Deduplicate by id (primary key)
     if (existingFriends.some(existing => existing.id === friendEntry.id)) return false;
+
+    // F4: also deduplicate by phone — prevents two entries for the same person
+    // (e.g. contact_96655512345 and a real calgoId with the same number)
+    if (friendEntry.phone) {
+        const incomingDigits = friendEntry.phone.replace(/\D/g, '');
+        const phoneCollision = existingFriends.some(existing =>
+            existing.phone && existing.phone.replace(/\D/g, '') === incomingDigits
+        );
+        if (phoneCollision) {
+            // If incoming entry has a calgoId and existing doesn't, upgrade in place
+            const existingIndex = existingFriends.findIndex(existing =>
+                existing.phone && existing.phone.replace(/\D/g, '') === incomingDigits
+            );
+            if (existingIndex >= 0 && friendEntry.calgoId && !existingFriends[existingIndex].calgoId) {
+                existingFriends[existingIndex] = { ...existingFriends[existingIndex], ...friendEntry };
+                Storage.setFriends(currentUser.id, existingFriends);
+                if (firestoreDb) {
+                    firestoreDb.collection('friends').doc(currentUser.id)
+                        .set({ list: existingFriends })
+                        .catch(err => console.error('Friend upgrade sync error:', err));
+                }
+                return true; // Upgraded existing entry
+            }
+            return false; // Duplicate phone, no upgrade needed
+        }
+    }
 
     const updatedFriends = [...existingFriends, friendEntry];
     Storage.setFriends(currentUser.id, updatedFriends);
@@ -1638,14 +2060,10 @@ function sendJoinCalgoInvitationToFriend(friendPhone, friendName) {
  * @returns {string}
  */
 function buildJoinCalgoWhatsAppMessage(friendName) {
-    const calgoAppUrl = 'https://king10asd.github.io/Calgo/';
-    return 'Hi ' + friendName + '! 👋\n\n' +
-        'I\'m using Calgo to manage my calendar and share my availability.\n\n' +
-        '📅 It\'s free — you can:\n' +
-        '• Share your calendar with friends\n' +
-        '• Accept or reject booking requests\n' +
-        '• Get reminders for upcoming meetings\n\n' +
-        'Try it here:\n👉 ' + calgoAppUrl + '\n\n— Sent via Calgo';
+    return getCompiledTemplate('joinCalgo', {
+        name:          friendName || '',
+        calgo_app_url: 'https://king10asd.github.io/Calgo/'
+    });
 }
 
 /* ══════════════════════════════════════
@@ -1660,11 +2078,29 @@ function buildJoinCalgoWhatsAppMessage(friendName) {
  */
 function getResolvedFriends() {
     if (!currentUser) return [];
-    const allLocalUsers = Storage.getUsers();
+    const allLocalUsers  = Storage.getUsers();
+    let   needsResave    = false;
+    const rawFriends     = Storage.getFriends(currentUser.id);
 
-    return Storage.getFriends(currentUser.id).map(storedEntry => {
+    const resolved = rawFriends.map(storedEntry => {
         // New format already has name embedded
-        if (storedEntry.name && storedEntry.phone !== undefined) return storedEntry;
+        if (storedEntry.name && storedEntry.phone !== undefined) {
+            // F3: if calgoId is null, try to upgrade using local users store by phone
+            if (!storedEntry.calgoId && storedEntry.phone) {
+                const digitsOnly   = storedEntry.phone.replace(/\D/g, '');
+                const matchingUser = Object.values(allLocalUsers).find(u =>
+                    u.phone && u.phone.replace(/\D/g, '') === digitsOnly
+                );
+                if (matchingUser) {
+                    storedEntry.calgoId = matchingUser.id;
+                    storedEntry.avatar  = matchingUser.avatar || storedEntry.avatar;
+                    // Update the id to the real Calgo id so future lookups work
+                    storedEntry.id      = matchingUser.id;
+                    needsResave         = true;
+                }
+            }
+            return storedEntry;
+        }
 
         // Old format: just { id, addedAt } — look up from users store
         const resolvedUser = allLocalUsers[storedEntry.id];
@@ -1678,6 +2114,18 @@ function getResolvedFriends() {
             addedAt: storedEntry.addedAt
         };
     }).filter(Boolean);
+
+    // Persist upgrades silently so next load has clean data
+    if (needsResave) {
+        Storage.setFriends(currentUser.id, resolved);
+        if (firestoreDb) {
+            firestoreDb.collection('friends').doc(currentUser.id)
+                .set({ list: resolved })
+                .catch(err => console.error('Friend upgrade sync error:', err));
+        }
+    }
+
+    return resolved;
 }
 
 /**
@@ -1847,7 +2295,16 @@ async function startCameraQrScanner() {
     
     container.style.display = 'block';
     cancelBtn.classList.remove('hidden');
-    
+
+    try {
+        await ensureHtml5QrCodeLoaded();
+    } catch (loadError) {
+        showToast('❌ Could not load QR scanner');
+        container.style.display = 'none';
+        cancelBtn.classList.add('hidden');
+        return;
+    }
+
     if (!html5QrCode) {
         html5QrCode = new Html5Qrcode("qrScannerContainer");
     }
@@ -1886,12 +2343,20 @@ async function stopCameraQrScanner() {
 async function processUploadedQrImage(fileInput) {
     if (!fileInput.files || fileInput.files.length === 0) return;
     const file = fileInput.files[0];
-    
+
+    showLoadingOverlay('Loading scanner…');
+    try {
+        await ensureHtml5QrCodeLoaded();
+    } catch (loadError) {
+        hideLoadingOverlay();
+        showToast('❌ Could not load QR scanner');
+        return;
+    }
+
     if (!html5QrCode) {
         html5QrCode = new Html5Qrcode("qrScannerContainer");
     }
-    
-    showLoadingOverlay('Scanning image...');
+
     try {
         const decodedText = await html5QrCode.scanFile(file, true);
         hideLoadingOverlay();
@@ -1922,29 +2387,44 @@ function handleScannedQrResult(decodedText) {
 
 function renderProfile() {
     if (!currentUser) return;
+
+    // Fast path — render header immediately so tab feels instant
     $('profileName').textContent = currentUser.name;
     renderProfilePhoneDisplay();
     renderPhoneUpdateBanner();
-    updateNavBar();
-    const setAv = el => {
-        if (currentUser.avatar) el.innerHTML = `<img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
-        else el.textContent = currentUser.name.charAt(0).toUpperCase();
-    };
-    setAv($('profileAvatarEl')); setAv($('navAvatar'));
+    updateNavBar(); // updateNavBar handles navAvatar — no need to set it again here
+
+    // profileAvatarEl only — navAvatar is already set by updateNavBar() above
+    if (currentUser.avatar) $('profileAvatarEl').innerHTML = `<img src="${currentUser.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    else $('profileAvatarEl').textContent = currentUser.name.charAt(0).toUpperCase();
+
     const url = buildShareUrl(currentUser.id);
     $('shareLink').value = url;
-    const qr = $('qrcode'); qr.innerHTML = '';
-    try { new QRCode(qr, { text: url, width: 155, height: 155, colorDark: '#4f46e5', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M }); }
-    catch(e) { qr.innerHTML = '<div style="padding:14px;color:#999;">QR unavailable</div>'; }
-    renderFriends();
-    renderNotificationPermissionBadge();
 
-    // Show contact import button only when the Contact Picker API is available
-    const contactPickerContainer = $('contactPickerContainer');
-    if (contactPickerContainer) {
-        contactPickerContainer.style.display =
-            ('contacts' in navigator && 'ContactsManager' in window) ? 'block' : 'none';
+    // Generate QR only once per user — expensive operation, no need to repeat
+    if (qrCodeGeneratedForUserId !== currentUser.id) {
+        const qr = $('qrcode');
+        qr.innerHTML = '';
+        try {
+            new QRCode(qr, { text: url, width: 155, height: 155, colorDark: '#4f46e5', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            qrCodeGeneratedForUserId = currentUser.id;
+        } catch(e) { qr.innerHTML = '<div style="padding:14px;color:#999;">QR unavailable</div>'; }
     }
+
+    // Defer heavier sections so the header paints before they compute
+    setTimeout(() => {
+        renderFriends();
+        renderRecentContactsSection();
+        renderReminderSettingsSection(); // This already includes the notification badge
+        renderMessageTemplatesSection();
+
+        // Show contact import button only when the Contact Picker API is available
+        const contactPickerContainer = $('contactPickerContainer');
+        if (contactPickerContainer) {
+            contactPickerContainer.style.display =
+                ('contacts' in navigator && 'ContactsManager' in window) ? 'block' : 'none';
+        }
+    }, 0);
 }
 
 /* ══════════════════════════════════════
@@ -2158,6 +2638,7 @@ function isDayBusy(dateStr, userId) {
 
 function setCalendarView(viewName) {
     currentView = viewName;
+    calendarLastRenderSignature = null; // Force re-render on view change
     const prefix = visitedUser ? 'pub-' : '';
     document.querySelectorAll('.view-switcher button').forEach(btn => btn.classList.remove('active'));
     $(prefix + 'view-' + viewName)?.classList.add('active');
@@ -2165,15 +2646,28 @@ function setCalendarView(viewName) {
 }
 
 function navigateCalendar(direction) {
+    calendarLastRenderSignature = null; // Force re-render on date navigation
     if      (currentView === 'day')  currentDate.setDate(currentDate.getDate() + direction);
     else if (currentView === 'week') currentDate.setDate(currentDate.getDate() + direction * 7);
     else                             currentDate.setMonth(currentDate.getMonth() + direction);
     renderCalendar();
 }
 
-function goToToday() { currentDate = new Date(); renderCalendar(); showToast('📅 Today'); }
+function goToToday() {
+    currentDate                 = new Date();
+    calendarLastRenderSignature = null; // Always re-render on explicit "today" press
+    renderCalendar();
+    showToast('📅 Today');
+}
 
 function renderCalendar() {
+    if (!currentUser && !visitedUser) return; // Guard: not ready yet
+
+    // Skip re-render if nothing has changed (same view, date, user, and data version)
+    const signature = buildCalendarRenderSignature();
+    if (signature === calendarLastRenderSignature) return;
+    calendarLastRenderSignature = signature;
+
     const userId   = visitedUser ? visitedUser.id : currentUser.id;
     const isPublic = !!visitedUser;
     const viewEl   = $(isPublic ? 'pubCalView' : 'calView');
@@ -2311,9 +2805,45 @@ function renderMonthView(container, titleEl, userId, isPublic) {
 function toggleSlotBusy(dateStr, hour) {
     const start    = hour.toString().padStart(2, '0') + ':00';
     const end      = (hour + 1).toString().padStart(2, '0') + ':00';
-    const existing = Storage.getBlocks().find(b => b.owner === currentUser.id && b.date === dateStr && b.start === start && b.end === end);
-    if (existing) { deleteBlock(existing.id); showToast('✅ ' + start + ' marked Available'); }
-    else { persistBlock({ id: generateUniqueId(), owner: currentUser.id, date: dateStr, start, end, label: '', created: new Date().toISOString() }); showToast('⛔ ' + start + ' marked Busy — tap again to undo'); }
+    const existing = Storage.getBlocks().find(b =>
+        b.owner === currentUser.id && b.date === dateStr && b.start === start && b.end === end
+    );
+
+    if (existing) {
+        deleteBlock(existing.id);
+        showToast('✅ ' + start + ' marked Available');
+        renderCalendar();
+        return;
+    }
+
+    // B2: check for active bookings on this slot before blocking
+    const conflictingBooking = Storage.getBookings().find(b =>
+        b.owner  === currentUser.id &&
+        b.date   === dateStr        &&
+        b.status !== 'rejected'     &&
+        parseTimeToHours(start) >= parseTimeToHours(b.start) &&
+        parseTimeToHours(start) <  parseTimeToHours(b.end)
+    );
+
+    if (conflictingBooking) {
+        const statusLabel = conflictingBooking.status === 'accepted' ? 'accepted' : 'pending';
+        const userConfirmed = confirm(
+            `⚠️ There is a ${statusLabel} booking on this slot from ${conflictingBooking.bookerName}.\n\n` +
+            `Marking it busy will not cancel their booking — you should reject it first.\n\nMark as busy anyway?`
+        );
+        if (!userConfirmed) return;
+    }
+
+    persistBlock({
+        id:      generateUniqueId(),
+        owner:   currentUser.id,
+        date:    dateStr,
+        start,
+        end,
+        label:   '',
+        created: new Date().toISOString()
+    });
+    showToast('⛔ ' + start + ' marked Busy — tap again to undo');
     renderCalendar();
 }
 
@@ -2341,9 +2871,11 @@ async function openPrintSaveModal() {
     printSaveCanvasEl = null;
     $('printSaveModal').classList.remove('hidden');
     const previewBox = $('printPreviewBox');
-    previewBox.innerHTML = '<div class="preview-loading">⏳ Generating preview…</div>';
+    previewBox.innerHTML = '<div class="preview-loading">⏳ Loading print engine…</div>';
 
     try {
+        await ensureHtml2CanvasLoaded();
+        previewBox.innerHTML = '<div class="preview-loading">⏳ Generating preview…</div>';
         const cleanEl = buildCleanCalendarElementForExport();
         document.body.appendChild(cleanEl);
 
@@ -2870,16 +3402,14 @@ function notifyOwnerViaWhatsApp() {
  * @returns {string}
  */
 function buildOwnerNotificationMessage(booking, ownerName) {
-    const calgoLink  = buildShareUrl(booking.owner);
-    const noteSection = booking.note ? '📝 Note: ' + booking.note + '\n' : '';
-    return 'Hi ' + ownerName + '! 👋\n\n' +
-        'You have a new booking request on Calgo:\n\n' +
-        '👤 From: ' + booking.bookerName + '\n' +
-        '📱 Phone: ' + booking.bookerPhone + '\n' +
-        '📅 Date: ' + booking.date + '\n' +
-        '🕐 Time: ' + booking.start + ' \u2013 ' + booking.end + '\n' +
-        noteSection +
-        '\nOpen your calendar to accept or reject:\n👉 ' + calgoLink;
+    return getCompiledTemplate('newBookingAlert', {
+        owner_name:  ownerName,
+        booker_name: booking.bookerName,
+        date:        booking.date,
+        time:        booking.start + ' \u2013 ' + booking.end,
+        note:        booking.note ? 'Note: ' + booking.note : '',
+        calgo_link:  buildShareUrl(booking.owner)
+    });
 }
 
 /* ══════════════════════════════════════
@@ -2932,8 +3462,17 @@ function loadBookingsFromLocalStorage() {
  * @returns {boolean}
  */
 function isBookingMadeByCurrentUser(booking, normalizedPhone) {
+    // Primary: match by bookerId — reliable for all users including Google
     if (booking.bookerId && currentUser && booking.bookerId === currentUser.id) return true;
-    if (booking.bookerPhone && normalizePhoneNumber(booking.bookerPhone) === normalizedPhone) return true;
+
+    // Fallback: phone match — only for users with a real phone number.
+    // Skip entirely if the user's phone field contains an email address
+    // (Google users before phone update) to avoid false positives.
+    const userHasRealPhone = currentUser && currentUser.phone && !currentUser.phone.includes('@');
+    if (userHasRealPhone && booking.bookerPhone) {
+        if (normalizePhoneNumber(booking.bookerPhone) === normalizedPhone) return true;
+    }
+
     return false;
 }
 
@@ -2943,14 +3482,53 @@ function renderIncomingBookings(bookings) {
     el.innerHTML = bookings.map(buildIncomingBookingItemHtml).join('');
 }
 
+/**
+ * Permanently delete a booking record from localStorage and Firestore.
+ * Only callable on rejected bookings — confirmed before deletion.
+ * @param {string} bookingId
+ */
+function deleteBookingRecord(bookingId) {
+    const booking = Storage.getBookings().find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const userConfirmed = confirm(
+        `Delete this booking record from ${booking.bookerName}?\n\nThis cannot be undone.`
+    );
+    if (!userConfirmed) return;
+
+    Storage.setBookings(Storage.getBookings().filter(b => b.id !== bookingId));
+    bumpCalendarDataVersion();
+    if (firestoreDb) {
+        firestoreDb.collection('bookings').doc(bookingId).delete().catch(console.error);
+    }
+    loadBookings();
+    showToast('🗑 Booking deleted');
+}
+
 function buildIncomingBookingItemHtml(booking) {
-    const calendarBtn    = booking.status === 'accepted'
+    const calendarBtn = booking.status === 'accepted'
         ? `<button class="booking-status-btn calendar" onclick="addBookingToCalendar('${booking.id}')">📅</button>`
         : '';
-    const notifyBtn      = (booking.status === 'accepted' || booking.status === 'rejected')
+    const notifyBtn = (booking.status === 'accepted' || booking.status === 'rejected')
         ? `<button class="booking-status-btn" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;" onclick="notifyBookerOfResponse('${booking.id}')">📲 Notify</button>`
         : '';
     const itemExtraClass = booking.status === 'pending' ? ' pending-booking' : '';
+
+    // Ignore button for pending bookings
+    const isIgnored  = isBookingReminderIgnored(booking.id);
+    const ignoreBtn  = booking.status === 'pending'
+        ? `<button class="reminder-ignore-btn ${isIgnored ? 'ignored' : ''}"
+               onclick="${isIgnored ? `unignoreReminderForBooking('${booking.id}')` : `ignoreReminderForBooking('${booking.id}')`}"
+               title="${isIgnored ? 'Re-enable reminders' : 'Ignore reminders for this booking'}">
+               ${isIgnored ? '🔔 Unignore' : '🔕 Ignore'}
+           </button>`
+        : '';
+
+    // B4: delete button only on rejected bookings to clean up old records
+    const deleteBtn = booking.status === 'rejected'
+        ? `<button class="booking-status-btn" style="background:#f1f5f9;color:var(--text-light);" onclick="deleteBookingRecord('${booking.id}')" title="Delete this record">🗑</button>`
+        : '';
+
     let actionButtons;
     if (booking.status === 'accepted') {
         actionButtons = `<button class="booking-status-btn reject" onclick="respondToBooking('${booking.id}','rejected')">✕ Cancel</button>`;
@@ -2961,13 +3539,14 @@ function buildIncomingBookingItemHtml(booking) {
             `<button class="booking-status-btn accept" onclick="respondToBooking('${booking.id}','accepted')">✓ Accept</button>` +
             `<button class="booking-status-btn reject" onclick="respondToBooking('${booking.id}','rejected')">✕ Reject</button>`;
     }
+
     return `<div class="booking-item${itemExtraClass}">` +
         `<div class="booking-info">` +
             `<div class="booking-name">👤 ${booking.bookerName} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${booking.bookerPhone}</span></div>` +
             `<div class="booking-meta">📅 ${booking.date} 🕐 ${booking.start}–${booking.end}${booking.note ? ' 📝 ' + booking.note : ''}</div>` +
             buildStatusBadgeHtml(booking.status) +
         `</div>` +
-        `<div class="booking-actions">${actionButtons}${calendarBtn}${notifyBtn}</div>` +
+        `<div class="booking-actions">${actionButtons}${calendarBtn}${notifyBtn}${ignoreBtn}${deleteBtn}</div>` +
     `</div>`;
 }
 
@@ -3005,19 +3584,27 @@ function respondToBooking(bookingId, newStatus) {
 function notifyBookerOfResponse(bookingId) {
     const booking = Storage.getBookings().find(b => b.id === bookingId);
     if (!booking) return;
+
     const ownerName  = currentUser ? currentUser.name : 'The host';
     const cleanPhone = booking.bookerPhone.replace(/^\+/, '');
-    const statusMap  = {
-        accepted: { emoji: '\u2705', word: 'accepted' },
-        rejected: { emoji: '\u274C', word: 'rejected' },
-        pending:  { emoji: '\u23F3', word: 'is still reviewing' }
+    const activeLang = getActiveTemplateLang();
+
+    const statusMap = {
+        accepted: { emoji: '✅', en: 'accepted',         ar: 'قَبِل'          },
+        rejected: { emoji: '❌', en: 'rejected',         ar: 'رفض'            },
+        pending:  { emoji: '⏳', en: 'is still reviewing', ar: 'لا يزال يراجع' }
     };
-    const { emoji, word } = statusMap[booking.status] || statusMap.pending;
-    const message = emoji + ' Hi ' + booking.bookerName + '!\n\n' +
-        ownerName + ' has ' + word + ' your booking request.\n\n' +
-        '\uD83D\uDCC5 Date: ' + booking.date + '\n' +
-        '\uD83D\uDD50 Time: ' + booking.start + ' \u2013 ' + booking.end + '\n\n' +
-        '\u2014 Calgo';
+    const statusEntry = statusMap[booking.status] || statusMap.pending;
+
+    const message = getCompiledTemplate('bookingStatusUpdate', {
+        booker_name:  booking.bookerName,
+        owner_name:   ownerName,
+        date:         booking.date,
+        time:         booking.start + ' \u2013 ' + booking.end,
+        status:       statusEntry[activeLang],
+        status_emoji: statusEntry.emoji
+    });
+
     window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message), '_blank');
 }
 
@@ -3038,6 +3625,428 @@ function addBookingToCalendar(bookingId) {
     const ef = buildGoogleCalendarDateTime(b.date, b.end);
     window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${sf}/${ef}&details=${encodeURIComponent(b.note || 'Calgo')}`, '_blank');
     showToast('📅 Opening Calendar…');
+}
+
+/* ══════════════════════════════════════
+   FEATURE: MESSAGE TEMPLATES
+   Editable WhatsApp message templates with EN/AR support.
+   Templates stored on the user account (Firestore via persistUser).
+   Variables substituted at send time via getCompiledTemplate().
+══════════════════════════════════════ */
+
+/**
+ * Required variables per template — saving warns if any are missing.
+ */
+const TEMPLATE_REQUIRED_VARIABLES = {
+    invite:               ['{calgo_link}'],
+    joinCalgo:            ['{calgo_app_url}'],
+    bookingStatusUpdate:  ['{booker_name}', '{status}'],
+    newBookingAlert:      ['{booker_name}', '{owner_name}']
+};
+
+/**
+ * All available variables per template with display labels.
+ * Required ones listed first for prominence.
+ */
+const TEMPLATE_AVAILABLE_VARIABLES = {
+    invite: [
+        { key: '{calgo_link}',   required: true  },
+        { key: '{gcal_link}',    required: false },
+        { key: '{name}',         required: false },
+        { key: '{sender_name}',  required: false },
+        { key: '{date}',         required: false },
+        { key: '{time}',         required: false },
+        { key: '{note}',         required: false }
+    ],
+    joinCalgo: [
+        { key: '{calgo_app_url}', required: true  },
+        { key: '{name}',          required: false }
+    ],
+    bookingStatusUpdate: [
+        { key: '{booker_name}',  required: true  },
+        { key: '{status}',       required: true  },
+        { key: '{status_emoji}', required: false },
+        { key: '{owner_name}',   required: false },
+        { key: '{date}',         required: false },
+        { key: '{time}',         required: false }
+    ],
+    newBookingAlert: [
+        { key: '{booker_name}',  required: true  },
+        { key: '{owner_name}',   required: true  },
+        { key: '{date}',         required: false },
+        { key: '{time}',         required: false },
+        { key: '{note}',         required: false },
+        { key: '{calgo_link}',   required: false }
+    ]
+};
+
+/** UI metadata for each template (labels in both languages) */
+const TEMPLATE_METADATA = {
+    invite: {
+        label:    'Invitation Message',
+        labelAr:  'رسالة الدعوة',
+        icon:     '📨',
+        sublabel: 'Single & group invites'
+    },
+    joinCalgo: {
+        label:    'Join Calgo Invitation',
+        labelAr:  'دعوة للانضمام إلى Calgo',
+        icon:     '💬',
+        sublabel: 'Sent to non-Calgo contacts'
+    },
+    bookingStatusUpdate: {
+        label:    'Booking Status Update',
+        labelAr:  'تحديث حالة الحجز',
+        icon:     '📲',
+        sublabel: 'You notify booker of accept/reject'
+    },
+    newBookingAlert: {
+        label:    'New Booking Alert',
+        labelAr:  'تنبيه حجز جديد',
+        icon:     '🔔',
+        sublabel: 'Visitor notifies you of their booking'
+    }
+};
+
+/** Dummy values used to render the live preview */
+const TEMPLATE_PREVIEW_DUMMY_VARS = {
+    name:          'Ahmed',
+    sender_name:   '',      // filled dynamically from currentUser
+    owner_name:    '',      // filled dynamically from currentUser
+    booker_name:   'Ahmed',
+    date:          '2026-07-01',
+    time:          '10:00 AM',
+    note:          'Looking forward to it!',
+    calgo_link:    'https://king10asd.github.io/Calgo/?user=demo&event=1&dt=2026-07-01&st=10:00&en=11:00',
+    gcal_link:     'https://calendar.google.com/calendar/render?action=TEMPLATE',
+    calgo_app_url: 'https://king10asd.github.io/Calgo/',
+    status:        '',   // filled dynamically based on active language
+    status_emoji:  '✅'
+};
+
+/** Default templates for both languages */
+const DEFAULT_MESSAGE_TEMPLATES = {
+    lang: 'en',
+    invite: {
+        en: `Hi {name}! 👋\n\nYou received an invitation from {sender_name} 📅\n\nDate: {date}\nTime: {time}\n{note}\nAdd to your calendar:\n👉 {calgo_link}\n\nOr open in Google Calendar:\n👉 {gcal_link}\n\n— Sent via Calgo: https://king10asd.github.io/Calgo/`,
+        ar: `مرحباً {name}! 👋\n\nلديك دعوة من {sender_name} 📅\n\nالتاريخ: {date}\nالوقت: {time}\n{note}\nأضف إلى تقويمك:\n👉 {calgo_link}\n\nأو افتح في Google Calendar:\n👉 {gcal_link}\n\n— أُرسل عبر Calgo: https://king10asd.github.io/Calgo/`
+    },
+    joinCalgo: {
+        en: `Hi {name}! 👋\n\nI'm using Calgo to manage my calendar and share my availability.\n\n📅 It's free — you can:\n• Share your calendar with friends\n• Accept or reject booking requests\n• Get reminders for upcoming meetings\n\nTry it here:\n👉 {calgo_app_url}\n\n— Sent via Calgo`,
+        ar: `مرحباً {name}! 👋\n\nأنا أستخدم Calgo لإدارة تقويمي ومشاركة أوقاتي المتاحة.\n\n📅 مجاني تماماً — يمكنك:\n• مشاركة تقويمك مع أصدقائك\n• قبول أو رفض طلبات الحجز\n• الحصول على تذكيرات للمواعيد\n\nجربه هنا:\n👉 {calgo_app_url}\n\n— عبر Calgo`
+    },
+    bookingStatusUpdate: {
+        en: `{status_emoji} Hi {booker_name}!\n\n{owner_name} has {status} your booking request.\n\n📅 Date: {date}\n🕐 Time: {time}\n\n— Calgo`,
+        ar: `{status_emoji} مرحباً {booker_name}!\n\n{owner_name} {status} طلب حجزك.\n\n📅 التاريخ: {date}\n🕐 الوقت: {time}\n\n— Calgo`
+    },
+    newBookingAlert: {
+        en: `Hi {owner_name}! 👋\n\nYou have a new booking request on Calgo:\n\n👤 From: {booker_name}\n📅 Date: {date}\n🕐 Time: {time}\n{note}\nOpen your calendar to accept or reject:\n👉 {calgo_link}\n\n— Calgo`,
+        ar: `مرحباً {owner_name}! 👋\n\nلديك طلب حجز جديد على Calgo:\n\n👤 من: {booker_name}\n📅 التاريخ: {date}\n🕐 الوقت: {time}\n{note}\nافتح تقويمك للقبول أو الرفض:\n👉 {calgo_link}\n\n— Calgo`
+    }
+};
+
+/** Tracks which template key is currently open in the editor modal */
+let currentEditingTemplateKey = null;
+
+/**
+ * Load the user's saved templates, merged with defaults for any missing keys.
+ * @returns {Object} Full templates object including lang preference
+ */
+function loadMessageTemplates() {
+    const saved = currentUser?.messageTemplates;
+    if (!saved) return JSON.parse(JSON.stringify(DEFAULT_MESSAGE_TEMPLATES));
+
+    // Deep merge: fill any missing template keys from defaults
+    const merged = JSON.parse(JSON.stringify(DEFAULT_MESSAGE_TEMPLATES));
+    if (saved.lang) merged.lang = saved.lang;
+    Object.keys(DEFAULT_MESSAGE_TEMPLATES).forEach(key => {
+        if (key === 'lang') return;
+        if (saved[key]) {
+            if (saved[key].en) merged[key].en = saved[key].en;
+            if (saved[key].ar) merged[key].ar = saved[key].ar;
+        }
+    });
+    return merged;
+}
+
+/**
+ * Save an updated templates object to currentUser and persist to Firestore.
+ * @param {Object} updatedTemplates
+ */
+function saveMessageTemplates(updatedTemplates) {
+    if (!currentUser) return;
+    currentUser.messageTemplates = updatedTemplates;
+    persistUser(currentUser);
+    Storage.setCurrentUser(currentUser);
+}
+
+/**
+ * Get the currently active template language ('en' or 'ar').
+ * @returns {string}
+ */
+function getActiveTemplateLang() {
+    return currentUser?.messageTemplates?.lang || 'en';
+}
+
+/**
+ * Compile a template by substituting all provided variables.
+ * Empty/null variable values have their entire containing line removed
+ * to avoid blank lines in the sent message.
+ * @param {string} templateKey
+ * @param {Object} variables - key/value pairs matching template placeholders
+ * @returns {string} Ready-to-send message string
+ */
+function getCompiledTemplate(templateKey, variables) {
+    const templates = loadMessageTemplates();
+    const lang      = templates.lang || 'en';
+    let   text      = templates[templateKey]?.[lang]
+                   || DEFAULT_MESSAGE_TEMPLATES[templateKey]?.[lang]
+                   || '';
+
+    Object.entries(variables).forEach(([key, value]) => {
+        const regex = new RegExp(`\\{${key}\\}`, 'g');
+        if (value === null || value === undefined || value === '') {
+            // Remove the entire line containing this empty variable
+            text = text.replace(new RegExp(`[^\n]*\\{${key}\\}[^\n]*\n?`, 'g'), '');
+        } else {
+            text = text.replace(regex, value);
+        }
+    });
+
+    // Clean up any triple+ newlines left by removed lines
+    return text.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/**
+ * Check if a template text contains all required variables for its key.
+ * @param {string} templateKey
+ * @param {string} templateText
+ * @returns {{ valid: boolean, missingVars: string[] }}
+ */
+function validateTemplateHasRequiredVars(templateKey, templateText) {
+    const required   = TEMPLATE_REQUIRED_VARIABLES[templateKey] || [];
+    const missingVars = required.filter(v => !templateText.includes(v));
+    return { valid: missingVars.length === 0, missingVars };
+}
+
+/* ── TEMPLATE UI RENDERING ── */
+
+/**
+ * Render the Message Templates card in the Profile tab.
+ * Shows all 4 templates as rows with Edit buttons.
+ */
+function renderMessageTemplatesSection() {
+    const container = $('messageTemplatesSection');
+    if (!container) return;
+
+    const activeLang = getActiveTemplateLang();
+
+    const templateRows = Object.entries(TEMPLATE_METADATA).map(([key, meta]) => `
+        <div class="template-row">
+            <div>
+                <div class="template-row-label">${meta.icon} ${activeLang === 'ar' ? meta.labelAr : meta.label}</div>
+                <div class="template-row-sublabel">${meta.sublabel}</div>
+            </div>
+            <button class="template-edit-btn" onclick="openTemplateEditorModal('${key}')">✏️ Edit</button>
+        </div>`).join('');
+
+    container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:15px;font-weight:700;">✉️ Message Templates</div>
+            <div style="font-size:11px;color:var(--text-light);">Active: <strong>${activeLang === 'ar' ? '🇸🇦 Arabic' : '🇬🇧 English'}</strong></div>
+        </div>
+        ${templateRows}`;
+}
+
+/**
+ * Open the template editor modal for a specific template key.
+ * Populates the textarea, variable chips, and live preview.
+ * @param {string} templateKey
+ */
+function openTemplateEditorModal(templateKey) {
+    currentEditingTemplateKey = templateKey;
+    const meta      = TEMPLATE_METADATA[templateKey];
+    const templates = loadMessageTemplates();
+    const activeLang = templates.lang || 'en';
+
+    $('templateEditorTitle').textContent = `✉️ Edit: ${meta.label}`;
+
+    // Set language toggle state
+    updateTemplateLanguageToggleButtons(activeLang);
+
+    // Populate textarea with the active language template
+    const textarea     = $('templateEditorTextarea');
+    textarea.value     = templates[templateKey]?.[activeLang] || DEFAULT_MESSAGE_TEMPLATES[templateKey][activeLang];
+    textarea.dir       = activeLang === 'ar' ? 'rtl' : 'ltr';
+
+    // Render variable chips
+    renderTemplateVariableChips(templateKey);
+
+    // Render preview
+    updateTemplatePreview();
+
+    $('templateEditorModal').classList.remove('hidden');
+    setTimeout(() => textarea.focus(), 100);
+}
+
+/**
+ * Update the EN/AR toggle buttons to reflect the active language.
+ * @param {string} activeLang - 'en' or 'ar'
+ */
+function updateTemplateLanguageToggleButtons(activeLang) {
+    $('templateLangBtnEn').classList.toggle('active', activeLang === 'en');
+    $('templateLangBtnAr').classList.toggle('active', activeLang === 'ar');
+}
+
+/**
+ * Render the variable chips for the current template key.
+ * Required chips are styled in red; clicking any chip inserts it at cursor.
+ * @param {string} templateKey
+ */
+function renderTemplateVariableChips(templateKey) {
+    const allVars      = TEMPLATE_AVAILABLE_VARIABLES[templateKey] || [];
+    const chipsContainer = $('templateVariableChips');
+    chipsContainer.innerHTML = allVars.map(v => `
+        <button class="template-var-chip ${v.required ? 'required' : ''}"
+            onclick="insertVariableAtCursor('${v.key}')"
+            title="${v.required ? 'Required' : 'Optional'}">${v.key}</button>`
+    ).join('');
+}
+
+/**
+ * Insert a variable placeholder at the current cursor position in the textarea.
+ * @param {string} variable - e.g. '{name}'
+ */
+function insertVariableAtCursor(variable) {
+    const textarea  = $('templateEditorTextarea');
+    const start     = textarea.selectionStart;
+    const end       = textarea.selectionEnd;
+    const before    = textarea.value.substring(0, start);
+    const after     = textarea.value.substring(end);
+    textarea.value  = before + variable + after;
+    const newCursor = start + variable.length;
+    textarea.selectionStart = textarea.selectionEnd = newCursor;
+    textarea.focus();
+    updateTemplatePreview();
+}
+
+/**
+ * Re-render the live preview using the current textarea content and dummy data.
+ * Called on every keystroke in the textarea.
+ */
+function updateTemplatePreview() {
+    const templateKey = currentEditingTemplateKey;
+    if (!templateKey) return;
+
+    const textarea   = $('templateEditorTextarea');
+    const previewBox = $('templatePreviewBox');
+    if (!textarea || !previewBox) return;
+
+    const activeLang = getActiveTemplateLang();
+
+    // Build dummy variables with language-aware values
+    const statusTextMap = { en: 'accepted', ar: 'قَبِل' };
+    const dummyVars     = {
+        ...TEMPLATE_PREVIEW_DUMMY_VARS,
+        sender_name: currentUser?.name || 'Your Name',
+        owner_name:  currentUser?.name || 'Your Name',
+        status:      statusTextMap[activeLang] || 'accepted'
+    };
+
+    // Compile the preview from the live textarea content (not saved version)
+    let previewText = textarea.value;
+    Object.entries(dummyVars).forEach(([key, value]) => {
+        const regex = new RegExp(`\\{${key}\\}`, 'g');
+        if (value === null || value === undefined || value === '') {
+            previewText = previewText.replace(new RegExp(`[^\n]*\\{${key}\\}[^\n]*\n?`, 'g'), '');
+        } else {
+            previewText = previewText.replace(regex, value);
+        }
+    });
+    previewText = previewText.replace(/\n{3,}/g, '\n\n').trim();
+
+    previewBox.textContent = previewText || '—';
+    previewBox.dir = activeLang === 'ar' ? 'rtl' : 'ltr';
+}
+
+/**
+ * Switch the editor modal between English and Arabic.
+ * Saves the current textarea content to the in-memory templates before switching.
+ * @param {string} lang - 'en' or 'ar'
+ */
+function switchTemplateEditorLanguage(lang) {
+    const templateKey = currentEditingTemplateKey;
+    if (!templateKey) return;
+
+    // Save current textarea content before switching
+    const templates   = loadMessageTemplates();
+    const currentLang = templates.lang || 'en';
+    templates[templateKey][currentLang] = $('templateEditorTextarea').value;
+    templates.lang = lang;
+    saveMessageTemplates(templates);
+
+    // Update modal title to reflect the active language
+    const meta = TEMPLATE_METADATA[templateKey];
+    $('templateEditorTitle').textContent = `✉️ Edit: ${lang === 'ar' ? meta.labelAr : meta.label}`;
+
+    // Update textarea
+    const textarea = $('templateEditorTextarea');
+    textarea.value = templates[templateKey][lang] || DEFAULT_MESSAGE_TEMPLATES[templateKey][lang];
+    textarea.dir   = lang === 'ar' ? 'rtl' : 'ltr';
+
+    updateTemplateLanguageToggleButtons(lang);
+    updateTemplatePreview();
+    renderMessageTemplatesSection();
+}
+
+/**
+ * Save the current textarea content for the active language.
+ * Warns if required variables are missing, but allows saving after confirmation.
+ */
+function saveTemplate() {
+    const templateKey  = currentEditingTemplateKey;
+    if (!templateKey) return;
+
+    const textarea     = $('templateEditorTextarea');
+    const templateText = textarea.value.trim();
+    if (!templateText) { showToast('❌ Template cannot be empty'); return; }
+
+    const { valid, missingVars } = validateTemplateHasRequiredVars(templateKey, templateText);
+    if (!valid) {
+        const varList = missingVars.join(', ');
+        const userConfirmed = confirm(
+            `⚠️ Required variable(s) missing: ${varList}\n\nWithout these, the message may not work correctly.\n\nSave anyway?`
+        );
+        if (!userConfirmed) return;
+    }
+
+    const templates   = loadMessageTemplates();
+    const activeLang  = templates.lang || 'en';
+    templates[templateKey][activeLang] = templateText;
+    saveMessageTemplates(templates);
+
+    closeModal('templateEditorModal');
+    renderMessageTemplatesSection();
+    showToast('✅ Template saved!');
+}
+
+/**
+ * Reset the current template (active language only) back to its default text.
+ * Shows a confirmation before overwriting.
+ */
+function resetTemplateToDefault() {
+    const templateKey = currentEditingTemplateKey;
+    if (!templateKey) return;
+
+    const activeLang  = getActiveTemplateLang();
+    const langLabel   = activeLang === 'ar' ? 'Arabic' : 'English';
+    const userConfirmed = confirm(`Reset the ${langLabel} template to its default text?\n\nYour custom text will be lost.`);
+    if (!userConfirmed) return;
+
+    const defaultText = DEFAULT_MESSAGE_TEMPLATES[templateKey][activeLang];
+    $('templateEditorTextarea').value = defaultText;
+    updateTemplatePreview();
+    showToast(`🔄 Reset to default ${langLabel} template`);
 }
 
 /* ══════════════════════════════════════
@@ -3153,15 +4162,23 @@ function openSingleInviteModal() {
 }
 
 function buildInviteMessage(date, start, end, note, recipientName) {
-    const [h, m]   = start.split(':').map(Number);
-    const time     = formatTimeAmPm(h, m);
-    const title    = encodeURIComponent(`Meeting with ${currentUser.name}`);
-    const sf       = buildGoogleCalendarDateTime(date, start);
-    const ef       = buildGoogleCalendarDateTime(date, end);
-    const gcal     = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${sf}/${ef}&details=${encodeURIComponent(note || '')}`;
-    const calgoUrl = buildShareUrl(currentUser.id) + `&event=1&title=${title}&dt=${date}&st=${start}&en=${end}&note=${encodeURIComponent(note || '')}`;
-    const greeting = recipientName ? `Hi ${recipientName}! 👋\n\n` : '';
-    return `${greeting}You received an invitation from ${currentUser.name} 📅\n\nDate: ${date}\nTime: ${time}\n${note ? 'Note: ' + note + '\n' : ''}\nAdd to your calendar:\n👉 ${calgoUrl}\n\nOr open in Google Calendar:\n👉 ${gcal}\n\n— Sent via Calgo: https://king10asd.github.io/Calgo/`;
+    const [h, m]    = start.split(':').map(Number);
+    const time      = formatTimeAmPm(h, m);
+    const title     = encodeURIComponent(`Meeting with ${currentUser.name}`);
+    const sf        = buildGoogleCalendarDateTime(date, start);
+    const ef        = buildGoogleCalendarDateTime(date, end);
+    const gcalLink  = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${sf}/${ef}&details=${encodeURIComponent(note || '')}`;
+    const calgoLink = buildShareUrl(currentUser.id) + `&event=1&title=${title}&dt=${date}&st=${start}&en=${end}&note=${encodeURIComponent(note || '')}`;
+
+    return getCompiledTemplate('invite', {
+        name:        recipientName || '',
+        sender_name: currentUser.name,
+        date,
+        time,
+        note:        note ? 'Note: ' + note : '',
+        calgo_link:  calgoLink,
+        gcal_link:   gcalLink
+    });
 }
 
 function sendSingleInviteViaWhatsApp() {
@@ -3174,6 +4191,7 @@ function sendSingleInviteViaWhatsApp() {
     if (!phone || !date || !start || !end) { showToast('❌ Fill all fields'); return; }
     if (start >= end) { showToast('❌ End after start'); return; }
     window.open(`https://wa.me/${cc + phone}?text=${encodeURIComponent(buildInviteMessage(date, start, end, note, singleInviteRecipientName))}`, '_blank');
+    logRecentContact(cc + phone, singleInviteRecipientName || '', 'invited');
     showToast('📨 Opening WhatsApp…');
 }
 
@@ -3259,6 +4277,7 @@ function sendGroupInviteToOne(phone) {
     const contact       = groupContactList.find(c => c.phone === phone);
     const recipientName = contact?.name || null;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(buildInviteMessage(date, start, end, note, recipientName))}`, '_blank');
+    logRecentContact(phone, recipientName || '', 'invited');
     if (contact) contact.sent = true;
     renderGroupContactList();
 }
@@ -3618,109 +4637,292 @@ function applyRecurringBusySlots() {
    for upcoming confirmed bookings.
 ══════════════════════════════════════ */
 
-/** Minimum minutes before a booking to fire a reminder */
-const BOOKING_REMINDER_MINUTES_BEFORE = 60;
+/* ══════════════════════════════════════
+   FEATURE: NOTIFICATION REMINDERS
+   Three reminder types: accepted booking window, pending booking alerts,
+   and a daily digest. All settings stored on the user account.
+══════════════════════════════════════ */
 
-/** Interval ID for the reminder check loop */
+/** Interval ID for the reminder polling loop */
 let notificationCheckIntervalId = null;
 
-/** Render the notification permission badge based on current browser permission */
-function renderNotificationPermissionBadge() {
-    const badgeEl = $('notifPermissionBadge');
-    if (!badgeEl) return;
+/** Default reminder settings applied when no saved settings exist */
+const DEFAULT_REMINDER_SETTINGS = {
+    minutesBefore:          60,     // Accepted booking reminder window
+    pendingAlertsEnabled:   true,   // Alert for unresponded pending bookings
+    pendingAlertMinutes:    180,    // Fire pending alert when booking is within 3 hours
+    dailyDigestEnabled:     false,  // Off by default — user must opt in
+    dailyDigestHour:        8,
+    dailyDigestMinute:      0
+};
+
+/**
+ * Load reminder settings from currentUser, merged with defaults.
+ * @returns {Object}
+ */
+function loadReminderSettings() {
+    const saved = currentUser?.reminderSettings;
+    if (!saved) return { ...DEFAULT_REMINDER_SETTINGS };
+    return { ...DEFAULT_REMINDER_SETTINGS, ...saved };
+}
+
+/**
+ * Persist updated reminder settings to currentUser and Firestore.
+ * @param {Object} updatedSettings
+ */
+function saveReminderSettings(updatedSettings) {
+    if (!currentUser) return;
+    currentUser.reminderSettings = updatedSettings;
+    persistUser(currentUser);
+    Storage.setCurrentUser(currentUser);
+}
+
+/**
+ * Update one reminder setting key and save.
+ * Re-renders the section so UI reflects the change immediately.
+ * @param {string} key
+ * @param {*} value
+ */
+function updateReminderSetting(key, value) {
+    const settings  = loadReminderSettings();
+    settings[key]   = value;
+    saveReminderSettings(settings);
+    renderReminderSettingsSection();
+}
+
+/* ── REMINDER SETTINGS UI ── */
+
+/**
+ * Render the full Reminder Settings section in the Profile tab.
+ * Includes permission badge, accepted-booking chips,
+ * pending-alerts toggle, and daily digest toggle.
+ */
+function renderReminderSettingsSection() {
+    const container = $('reminderSettingsSection');
+    if (!container) return;
+
+    const settings      = loadReminderSettings();
+    const isGranted     = 'Notification' in window && Notification.permission === 'granted';
+    const isSupported   = 'Notification' in window;
+
+    const permissionBadgeHtml = buildPermissionBadgeHtml();
+
+    // Chips for accepted-booking reminder window
+    const acceptedChipsHtml = [15, 30, 60, 120, 180].map(mins => {
+        const label  = mins < 60 ? `${mins} min` : `${mins / 60} hr`;
+        const active = settings.minutesBefore === mins ? 'active' : '';
+        return `<div class="reminder-chip ${active}" onclick="updateReminderSetting('minutesBefore', ${mins})">${label}</div>`;
+    }).join('');
+
+    // Chips for pending alert window
+    const pendingChipsHtml = [60, 120, 180, 360, 720].map(mins => {
+        const label  = mins < 60 ? `${mins} min` : `${mins / 60} hr`;
+        const active = settings.pendingAlertMinutes === mins ? 'active' : '';
+        return `<div class="reminder-chip ${active}" onclick="updateReminderSetting('pendingAlertMinutes', ${mins})">${label}</div>`;
+    }).join('');
+
+    const digestTimeValue = `${String(settings.dailyDigestHour).padStart(2,'0')}:${String(settings.dailyDigestMinute).padStart(2,'0')}`;
+
+    const settingsHtml = isGranted ? `
+        <div style="margin-top:12px;">
+            <div style="font-size:12px;font-weight:600;color:var(--text-light);margin-bottom:5px;">Remind me before confirmed bookings:</div>
+            <div class="reminder-chips-row">${acceptedChipsHtml}</div>
+        </div>
+
+        <label class="reminder-toggle-row">
+            <input type="checkbox" ${settings.pendingAlertsEnabled ? 'checked' : ''}
+                onchange="updateReminderSetting('pendingAlertsEnabled', this.checked)">
+            Alert me about unresponded booking requests
+        </label>
+        ${settings.pendingAlertsEnabled ? `
+        <div class="reminder-sub-setting">
+            <div style="margin-bottom:5px;">Alert when the booking slot is within:</div>
+            <div class="reminder-chips-row">${pendingChipsHtml}</div>
+            <div style="margin-top:6px;font-size:11px;">Repeats every hour until you respond or ignore.</div>
+        </div>` : ''}
+
+        <label class="reminder-toggle-row">
+            <input type="checkbox" ${settings.dailyDigestEnabled ? 'checked' : ''}
+                onchange="updateReminderSetting('dailyDigestEnabled', this.checked)">
+            Morning summary of today's bookings
+        </label>
+        ${settings.dailyDigestEnabled ? `
+        <div class="reminder-sub-setting">
+            <div style="margin-bottom:6px;">Send digest at:</div>
+            <input type="time" value="${digestTimeValue}" style="margin:0;padding:8px 12px;font-size:13px;width:auto;"
+                onchange="saveDailyDigestTime(this.value)">
+        </div>` : ''}
+    ` : (isSupported ? `<div style="font-size:12px;color:var(--text-light);margin-top:8px;">Enable notifications above to configure reminder settings.</div>` : '');
+
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:15px;font-weight:700;">🔔 Reminder Settings</div>
+            ${permissionBadgeHtml}
+        </div>
+        ${settingsHtml}`;
+}
+
+/**
+ * Build the HTML string for the notification permission badge.
+ * @returns {string}
+ */
+function buildPermissionBadgeHtml() {
     if (!('Notification' in window)) {
-        badgeEl.textContent = '🔕 Not supported';
-        badgeEl.className   = 'notif-badge denied';
-        badgeEl.onclick     = null;
-        return;
+        return `<span class="notif-badge denied">🔕 Not supported</span>`;
     }
     const permission = Notification.permission;
     if (permission === 'granted') {
-        badgeEl.innerHTML = '🔔 Reminders On';
-        badgeEl.className = 'notif-badge granted';
-        badgeEl.onclick   = () => showToast('✅ Notifications already enabled');
-    } else if (permission === 'denied') {
-        badgeEl.innerHTML = '🔕 Blocked by browser';
-        badgeEl.className = 'notif-badge denied';
-        badgeEl.onclick   = () => showToast('⚠️ Enable notifications in browser settings');
-    } else {
-        badgeEl.innerHTML = '🔔 Enable Reminders';
-        badgeEl.className = 'notif-badge default';
-        badgeEl.onclick   = requestNotificationPermission;
+        return `<span class="notif-badge granted" onclick="showToast('✅ Notifications enabled')">🔔 Reminders On</span>`;
     }
+    if (permission === 'denied') {
+        return `<span class="notif-badge denied" onclick="showToast('⚠️ Enable in browser settings')">🔕 Blocked</span>`;
+    }
+    return `<div id="notifPermissionBadge" class="notif-badge default" onclick="requestNotificationPermission()">🔔 Enable Reminders</div>`;
+}
+
+/**
+ * Parse a "HH:MM" time string and save it as the daily digest time.
+ * @param {string} timeString - e.g. "08:30"
+ */
+function saveDailyDigestTime(timeString) {
+    const [hour, minute] = timeString.split(':').map(Number);
+    const settings = loadReminderSettings();
+    settings.dailyDigestHour   = hour;
+    settings.dailyDigestMinute = minute;
+    saveReminderSettings(settings);
+    renderReminderSettingsSection();
+    showToast(`✅ Daily digest set for ${timeString}`);
+}
+
+/* ── PERMISSION ── */
+
+/** Render the notification permission badge (kept for backward compatibility) */
+function renderNotificationPermissionBadge() {
+    // Badge is now rendered inside renderReminderSettingsSection.
+    // This function is kept so initNotificationReminders() still works.
+    renderReminderSettingsSection();
 }
 
 /** Ask the user for notification permission and start the reminder loop if granted */
 async function requestNotificationPermission() {
-    if (!('Notification' in window)) { showToast('🔕 Notifications not supported in this browser'); return; }
+    if (!('Notification' in window)) { showToast('🔕 Not supported in this browser'); return; }
     if (Notification.permission === 'granted') { showToast('✅ Notifications already enabled'); return; }
-    if (Notification.permission === 'denied')  { showToast('⚠️ Notifications blocked — enable in browser settings'); return; }
+    if (Notification.permission === 'denied')  { showToast('⚠️ Enable notifications in browser settings'); return; }
 
     const permissionResult = await Notification.requestPermission();
-    renderNotificationPermissionBadge();
+    renderReminderSettingsSection();
     if (permissionResult === 'granted') {
-        showToast('🔔 Reminders enabled! You\'ll be notified 1 hour before bookings.');
+        const settings = loadReminderSettings();
+        const windowLabel = settings.minutesBefore < 60
+            ? settings.minutesBefore + ' minutes'
+            : (settings.minutesBefore / 60) + ' hour(s)';
+        showToast(`🔔 Reminders enabled! You'll be notified ${windowLabel} before bookings.`);
         startBookingReminderLoop();
     } else {
         showToast('⚠️ Notification permission denied');
     }
 }
 
+/* ── IGNORE LIST ── */
+
 /**
- * Fire a browser notification for a booking reminder.
- * @param {Object} booking - The booking object to notify about
+ * Check if a booking's reminders have been ignored by the user.
+ * @param {string} bookingId
+ * @returns {boolean}
  */
-function fireBookingReminderNotification(booking) {
+function isBookingReminderIgnored(bookingId) {
+    const ignoredList = Storage.getRaw('ignored_reminders') || [];
+    return ignoredList.includes(bookingId);
+}
+
+/**
+ * Add a booking to the ignored reminders list.
+ * Prevents pending alerts from firing for this booking.
+ * @param {string} bookingId
+ */
+function ignoreReminderForBooking(bookingId) {
+    const ignoredList = Storage.getRaw('ignored_reminders') || [];
+    if (!ignoredList.includes(bookingId)) {
+        ignoredList.push(bookingId);
+        Storage.setRaw('ignored_reminders', ignoredList);
+    }
+    loadBookings();
+    showToast('🔕 Reminders ignored for this booking');
+}
+
+/**
+ * Remove a booking from the ignored reminders list.
+ * @param {string} bookingId
+ */
+function unignoreReminderForBooking(bookingId) {
+    const updatedList = (Storage.getRaw('ignored_reminders') || []).filter(id => id !== bookingId);
+    Storage.setRaw('ignored_reminders', updatedList);
+    loadBookings();
+    showToast('🔔 Reminders re-enabled for this booking');
+}
+
+/* ── NOTIFICATION FIRING ── */
+
+/**
+ * Fire a browser notification with a given title and body.
+ * @param {string} title
+ * @param {string} body
+ * @param {string} tag   - Deduplication tag
+ */
+function fireNotification(title, body, tag) {
     if (Notification.permission !== 'granted') return;
-
-    const ownerName  = Storage.getUsers()[booking.owner]?.name || 'Someone';
-    const isOutgoing = booking.bookerPhone === currentUser.phone;
-    const title      = isOutgoing ? `📅 Reminder: Appointment with ${ownerName}` : `📅 Upcoming: ${booking.bookerName}`;
-    const body       = `Today at ${booking.start} – ${booking.end}`;
-
     const notification = new Notification(title, {
         body,
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%236366f1"/><text x="50" y="68" text-anchor="middle" font-size="50">📅</text></svg>',
-        tag:  'calgo-reminder-' + booking.id
+        tag
     });
     notification.onclick = () => { window.focus(); notification.close(); };
 }
 
+/* ── STALE KEY PRUNING ── */
+
 /**
- * Remove localStorage notification-tracking keys from previous days to prevent buildup.
- * Keys follow the pattern 'notified_YYYY-MM-DD'.
+ * Remove stale localStorage reminder-tracking keys from previous days.
+ * Handles all patterns: notified_, pending_alert_, digest_fired_.
  */
 function pruneStaleNotificationKeys() {
     const todayStr = formatDateToISO(new Date());
     for (let i = localStorage.length - 1; i >= 0; i--) {
         const rawKey = localStorage.key(i);
         if (!rawKey) continue;
-        const keyWithoutPrefix = rawKey.replace(/^fc_/, '');
-        if (/^notified_\d{4}-\d{2}-\d{2}$/.test(keyWithoutPrefix)) {
-            const keyDate = keyWithoutPrefix.replace('notified_', '');
-            if (keyDate < todayStr) localStorage.removeItem(rawKey);
-        }
+        const keyBody = rawKey.replace(/^fc_/, '');
+        const isStalePattern = (
+            /^notified_\d{4}-\d{2}-\d{2}$/.test(keyBody)        ||
+            /^pending_alert_[^_]+_\d{4}-\d{2}-\d{2}/.test(keyBody) ||
+            /^digest_fired_\d{4}-\d{2}-\d{2}$/.test(keyBody)
+        );
+        if (!isStalePattern) continue;
+        // Extract the date portion (last YYYY-MM-DD segment)
+        const dateMatch = keyBody.match(/(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch && dateMatch[1] < todayStr) localStorage.removeItem(rawKey);
     }
 }
 
-/**
- * Check all accepted bookings and fire reminders for those within the reminder window.
- * Tracks already-notified bookings to avoid duplicate alerts.
- */
-function checkAndFirePendingReminders() {
-    if (Notification.permission !== 'granted' || !currentUser) return;
-    pruneStaleNotificationKeys();
+/* ── 1.2a: ACCEPTED BOOKING REMINDERS ── */
 
-    const now              = new Date();
-    const todayStr         = formatDateToISO(now);
-    const currentMinutes   = now.getHours() * 60 + now.getMinutes();
-    const notifiedKey      = 'notified_' + todayStr;
-    const alreadyNotified  = Storage.getRaw(notifiedKey) || [];
+/**
+ * Check all accepted bookings and fire reminders for those within
+ * the user-configured reminder window. Avoids duplicate alerts per day.
+ */
+function checkAndFireAcceptedBookingReminders() {
+    if (Notification.permission !== 'granted' || !currentUser) return;
+
+    const settings        = loadReminderSettings();
+    const now             = new Date();
+    const todayStr        = formatDateToISO(now);
+    const currentMinutes  = now.getHours() * 60 + now.getMinutes();
+    const notifiedKey     = 'notified_' + todayStr;
+    const alreadyNotified = Storage.getRaw(notifiedKey) || [];
 
     const todaysAcceptedBookings = Storage.getBookings().filter(b =>
         b.status === 'accepted' &&
         b.date   === todayStr   &&
-        (b.owner === currentUser.id || b.bookerPhone === currentUser.phone)
+        (b.owner === currentUser.id || normalizePhoneNumber(b.bookerPhone) === normalizePhoneNumber(currentUser.phone))
     );
 
     todaysAcceptedBookings.forEach(booking => {
@@ -3730,19 +4932,137 @@ function checkAndFirePendingReminders() {
         const bookingTotalMinutes = bookingHour * 60 + bookingMinute;
         const minutesUntilBooking = bookingTotalMinutes - currentMinutes;
 
-        if (minutesUntilBooking > 0 && minutesUntilBooking <= BOOKING_REMINDER_MINUTES_BEFORE) {
-            fireBookingReminderNotification(booking);
+        if (minutesUntilBooking > 0 && minutesUntilBooking <= settings.minutesBefore) {
+            const ownerName  = Storage.getUsers()[booking.owner]?.name || 'Someone';
+            const isOutgoing = normalizePhoneNumber(booking.bookerPhone) === normalizePhoneNumber(currentUser.phone);
+            const title      = isOutgoing
+                ? `📅 Reminder: Appointment with ${ownerName}`
+                : `📅 Upcoming: ${booking.bookerName}`;
+            fireNotification(title, `Today at ${booking.start} – ${booking.end}`, 'reminder-' + booking.id);
             alreadyNotified.push(booking.id);
             Storage.setRaw(notifiedKey, alreadyNotified);
         }
     });
 }
 
-/** Start polling every 5 minutes for upcoming booking reminders */
+/* ── 1.2b: PENDING BOOKING ALERTS ── */
+
+/**
+ * Check pending (unresponded) bookings and alert the owner if the
+ * booking slot is within the configured alert window.
+ * Repeats every hour until the owner responds or ignores the booking.
+ */
+function checkAndFirePendingBookingAlerts() {
+    if (Notification.permission !== 'granted' || !currentUser) return;
+
+    const settings       = loadReminderSettings();
+    if (!settings.pendingAlertsEnabled) return;
+
+    const now            = new Date();
+    const todayStr       = formatDateToISO(now);
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentHour    = now.getHours();
+
+    const pendingTodayBookings = Storage.getBookings().filter(b =>
+        b.status === 'pending'  &&
+        b.date   === todayStr   &&
+        b.owner  === currentUser.id
+    );
+
+    pendingTodayBookings.forEach(booking => {
+        if (isBookingReminderIgnored(booking.id)) return;
+
+        const [bookingHour, bookingMinute] = booking.start.split(':').map(Number);
+        const bookingTotalMinutes = bookingHour * 60 + bookingMinute;
+        const minutesUntilBooking = bookingTotalMinutes - currentMinutes;
+
+        if (minutesUntilBooking <= 0 || minutesUntilBooking > settings.pendingAlertMinutes) return;
+
+        // Use hour-bucketed key so alert can repeat each new hour
+        const hourKey = `pending_alert_${booking.id}_${todayStr}_${currentHour}`;
+        if (Storage.getRaw(hourKey)) return; // Already alerted this hour
+
+        fireNotification(
+            `⏳ Unresponded Booking — ${booking.bookerName}`,
+            `Slot at ${booking.start} today — accept or reject in Calgo`,
+            'pending-alert-' + booking.id
+        );
+        Storage.setRaw(hourKey, true);
+    });
+}
+
+/* ── 1.2c: DAILY DIGEST ── */
+
+/**
+ * Check if the daily digest should fire now and send it if so.
+ * Fires once per day at the user-configured time.
+ */
+function checkAndFireDailyDigest() {
+    if (Notification.permission !== 'granted' || !currentUser) return;
+
+    const settings = loadReminderSettings();
+    if (!settings.dailyDigestEnabled) return;
+
+    const now        = new Date();
+    const todayStr   = formatDateToISO(now);
+    const digestKey  = 'digest_fired_' + todayStr;
+
+    if (Storage.getRaw(digestKey)) return; // Already fired today
+
+    const currentHour   = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Only fire if current time has reached or passed the configured digest time
+    const digestDueMinutes    = settings.dailyDigestHour * 60 + settings.dailyDigestMinute;
+    const currentTotalMinutes = currentHour * 60 + currentMinute;
+    if (currentTotalMinutes < digestDueMinutes) return;
+
+    const todaysBookings = Storage.getBookings().filter(b =>
+        b.date   === todayStr &&
+        b.status === 'accepted' &&
+        (b.owner === currentUser.id || normalizePhoneNumber(b.bookerPhone) === normalizePhoneNumber(currentUser.phone))
+    );
+
+    const { title, body } = buildDailyDigestNotificationMessage(todaysBookings);
+    fireNotification(title, body, 'daily-digest-' + todayStr);
+    Storage.setRaw(digestKey, true);
+}
+
+/**
+ * Build the title and body for the daily digest notification.
+ * @param {Array} bookings - Today's accepted bookings
+ * @returns {{ title: string, body: string }}
+ */
+function buildDailyDigestNotificationMessage(bookings) {
+    if (!bookings.length) {
+        return { title: '📅 Calgo — Daily Digest', body: 'No bookings today. Enjoy your free day!' };
+    }
+    const sorted   = [...bookings].sort((a, b) => a.start.localeCompare(b.start));
+    const firstBooking = sorted[0];
+    const title    = `📅 Today: ${bookings.length} booking${bookings.length > 1 ? 's' : ''}`;
+    const body     = `Next at ${firstBooking.start}${bookings.length > 1 ? ` + ${bookings.length - 1} more` : ''}`;
+    return { title, body };
+}
+
+/* ── LOOP ── */
+
+/**
+ * Run all reminder checks in one pass.
+ * Called by the polling loop every 5 minutes.
+ */
+function runAllReminderChecks() {
+    if (Notification.permission !== 'granted' || !currentUser) return;
+    pruneStaleNotificationKeys();
+    checkAndFireAcceptedBookingReminders();
+    checkAndFirePendingBookingAlerts();
+    checkAndFireDailyDigest();
+}
+
+/** Start the 5-minute reminder polling loop */
 function startBookingReminderLoop() {
-    if (notificationCheckIntervalId) return; // Already running
-    checkAndFirePendingReminders(); // Run immediately once
-    notificationCheckIntervalId = setInterval(checkAndFirePendingReminders, 5 * 60 * 1000);
+    if (notificationCheckIntervalId) return;
+    runAllReminderChecks();
+    notificationCheckIntervalId = setInterval(runAllReminderChecks, 5 * 60 * 1000);
 }
 
 /** Stop the reminder polling loop */
@@ -3753,9 +5073,8 @@ function stopBookingReminderLoop() {
     }
 }
 
-/** Initialize notifications on app load if permission already granted */
+/** Initialise notifications on app load if permission already granted */
 function initNotificationReminders() {
-    renderNotificationPermissionBadge();
     if ('Notification' in window && Notification.permission === 'granted') {
         startBookingReminderLoop();
     }
