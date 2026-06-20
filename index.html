@@ -1289,6 +1289,22 @@ let recentContactsSectionExpanded = true;
 /** Shorthand for getElementById */
 const $ = id => document.getElementById(id);
 
+/**
+ * Escape user-supplied strings before injecting into innerHTML.
+ * Prevents XSS from malicious booker names, notes, labels etc.
+ * @param {string|null} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 /** Show a toast notification for 3 seconds */
 function showToast(message) {
     const toastEl = $('toast');
@@ -1643,7 +1659,10 @@ function normalizePhoneNumber(phone) {
 }
 
 function logout() {
-    currentUser = null;
+    stopBookingReminderLoop();      // Stop reminder interval before clearing user state
+    currentUser  = null;
+    visitedUser  = null;
+    calendarLastRenderSignature = null;
     clearRememberedSession();
     if (isFirebaseReady) firebase.auth().signOut();
     location.href = getBaseUrl();
@@ -1840,14 +1859,14 @@ function toggleRecentContactsSection() {
  */
 function renderRecentContactChip(contact) {
     const displayName   = contact.name || ('+' + contact.phone);
-    const avatarContent = contact.name ? contact.name.charAt(0).toUpperCase() : '📱';
+    const avatarContent = contact.name ? escapeHtml(contact.name.charAt(0).toUpperCase()) : '📱';
     const tagLabel      = contact.interaction === 'booked_you' ? '📅 Booked you' : '📨 Invited';
     const safePhone     = contact.phone.replace(/'/g, "\\'");
     const safeName      = (contact.name || '').replace(/'/g, "\\'");
 
     return `<div class="recent-chip">
         <div class="recent-chip-avatar">${avatarContent}</div>
-        <div class="recent-chip-name" title="${displayName}">${displayName}</div>
+        <div class="recent-chip-name" title="${escapeHtml(displayName)}">${escapeHtml(displayName)}</div>
         <div class="recent-chip-tag">${tagLabel}</div>
         <button class="recent-add-btn" onclick="addRecentContactAsFriend('${safePhone}','${safeName}')">+ Friend</button>
     </div>`;
@@ -2137,8 +2156,8 @@ function getResolvedFriends() {
  */
 function renderFriendChip(friendEntry) {
     const avatarContent = friendEntry.avatar
-        ? `<img src="${friendEntry.avatar}" style="width:100%;height:100%;object-fit:cover;">`
-        : friendEntry.name.charAt(0).toUpperCase();
+        ? `<img src="${escapeHtml(friendEntry.avatar)}" style="width:100%;height:100%;object-fit:cover;">`
+        : escapeHtml(friendEntry.name.charAt(0).toUpperCase());
 
     const isCalgoUser    = !!friendEntry.calgoId;
     const safeName       = friendEntry.name.replace(/'/g, "\\'");
@@ -2155,7 +2174,7 @@ function renderFriendChip(friendEntry) {
 
     return `<div class="friend-chip">
         <div class="friend-avatar">${avatarContent}</div>
-        <div class="friend-name" title="${friendEntry.name}">${friendEntry.name}</div>
+        <div class="friend-name" title="${escapeHtml(friendEntry.name)}">${escapeHtml(friendEntry.name)}</div>
         ${calgoStatusBadge}
         <div class="friend-action-btns">${actionButtons}</div>
     </div>`;
@@ -2589,6 +2608,8 @@ function processPendingCalendarAdd() {
 
 function enterPublicView(user) {
     visitedUser = user;
+    calendarLastRenderSignature = null; // Always render fresh for a different user's calendar
+
     const savedSession = Storage.getCurrentUser();
     if (savedSession && savedSession.id && savedSession.id !== user.id) {
         const savedUserData = Storage.getUsers()[savedSession.id];
@@ -2598,8 +2619,10 @@ function enterPublicView(user) {
     hideLoadingOverlay();
     $('publicView').classList.remove('hidden');
     $('publicUserName').textContent = user.name;
-    const avatarEl = $('publicUserAvatar');
-    avatarEl.innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.name.charAt(0).toUpperCase();
+    const avatarEl    = $('publicUserAvatar');
+    avatarEl.innerHTML = user.avatar
+        ? `<img src="${escapeHtml(user.avatar)}">`
+        : escapeHtml(user.name.charAt(0).toUpperCase());
     renderCalendar();
 }
 
@@ -2713,7 +2736,7 @@ function buildDayViewHourRow(dateStr, hour, userId, isPublic) {
 }
 
 function buildBlockedDayRow(dateStr, hour, timeLabel, nightClass, block) {
-    const label = block.label || '';
+    const label = escapeHtml(block.label || '');
     return `<div class="hour-row${nightClass}">
   <div class="hour-label">${timeLabel}</div>
   <div class="hour-slot blocked${nightClass}" style="flex-direction:column;align-items:flex-start;gap:4px;cursor:pointer;" onclick="toggleSlotBusy('${dateStr}',${hour})" title="Click to mark Available">
@@ -3153,7 +3176,7 @@ function renderImportEventCheckboxList(events) {
             <input type="checkbox" class="import-event-checkbox" data-index="${index}" checked
                 style="width:16px;height:16px;margin:2px 0 0;padding:0;border:none;flex-shrink:0;cursor:pointer;accent-color:var(--primary);">
             <span style="flex:1;min-width:0;">
-                <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.title}</strong>
+                <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(ev.title)}</strong>
                 <span style="color:var(--text-light);font-size:11px;">📅 ${ev.date} &nbsp; 🕐 ${ev.start}${ev.end !== ev.start ? ' – ' + ev.end : ''}</span>
             </span>
         </label>`).join('');
@@ -3223,7 +3246,7 @@ function exportToGoogleCalendar() {
     $('exportEventList').innerHTML = rows.map(r => `
         <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f8fafc;border-radius:11px;border:1px solid var(--border);cursor:pointer;font-size:13px;">
             <input type="checkbox" class="export-checkbox" data-date="${r.date}" data-start="${r.start}" data-end="${r.end}" data-label="${encodeURIComponent(r.label)}" checked style="width:16px;height:16px;margin:0;padding:0;border:none;flex-shrink:0;cursor:pointer;">
-            <span style="flex:1;"><strong>${r.label}</strong><br><span style="color:var(--text-light);font-size:11px;">${r.meta}</span></span>
+            <span style="flex:1;"><strong>${escapeHtml(r.label)}</strong><br><span style="color:var(--text-light);font-size:11px;">${escapeHtml(r.meta)}</span></span>
         </label>`).join('');
     $('exportModal').classList.remove('hidden');
 }
@@ -3306,6 +3329,7 @@ function submitBooking() {
         created:     new Date().toISOString()
     };
     persistBooking(newBooking);
+    bookingTargetUserId = null; // Clear so stale target doesn't affect future bookings
     closeModal('bookingModal');
     renderCalendar();
     showBookingConfirmation(newBooking);
@@ -3542,8 +3566,8 @@ function buildIncomingBookingItemHtml(booking) {
 
     return `<div class="booking-item${itemExtraClass}">` +
         `<div class="booking-info">` +
-            `<div class="booking-name">👤 ${booking.bookerName} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${booking.bookerPhone}</span></div>` +
-            `<div class="booking-meta">📅 ${booking.date} 🕐 ${booking.start}–${booking.end}${booking.note ? ' 📝 ' + booking.note : ''}</div>` +
+            `<div class="booking-name">👤 ${escapeHtml(booking.bookerName)} <span style="font-weight:400;color:var(--text-light);font-size:11px;">${escapeHtml(booking.bookerPhone)}</span></div>` +
+            `<div class="booking-meta">📅 ${booking.date} 🕐 ${booking.start}–${booking.end}${booking.note ? ' 📝 ' + escapeHtml(booking.note) : ''}</div>` +
             buildStatusBadgeHtml(booking.status) +
         `</div>` +
         `<div class="booking-actions">${actionButtons}${calendarBtn}${notifyBtn}${ignoreBtn}${deleteBtn}</div>` +
@@ -3555,7 +3579,7 @@ function renderOutgoingBookings(bookings, users) {
     if (!bookings.length) { el.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span>No outgoing requests yet</div>'; return; }
     el.innerHTML = bookings.map(b => {
         const calBtn = b.status === 'accepted' ? `<button class="booking-status-btn calendar" onclick="addBookingToCalendar('${b.id}')">📅</button>` : '';
-        return `<div class="booking-item"><div class="booking-info"><div class="booking-name">📅 With: ${users[b.owner]?.name || 'User'}</div><div class="booking-meta">📅 ${b.date} 🕐 ${b.start}–${b.end}</div>${buildStatusBadgeHtml(b.status)}</div><div class="booking-actions">${calBtn}</div></div>`;
+        return `<div class="booking-item"><div class="booking-info"><div class="booking-name">📅 With: ${escapeHtml(users[b.owner]?.name || 'User')}</div><div class="booking-meta">📅 ${b.date} 🕐 ${b.start}–${b.end}</div>${buildStatusBadgeHtml(b.status)}</div><div class="booking-actions">${calBtn}</div></div>`;
     }).join('');
 }
 
@@ -4247,9 +4271,9 @@ function renderGroupContactList() {
     }
     el.innerHTML = groupContactList.map(c => `
         <div class="group-contact-row">
-            <div class="group-contact-avatar">${c.name ? c.name.charAt(0).toUpperCase() : '📱'}</div>
+            <div class="group-contact-avatar">${c.name ? escapeHtml(c.name.charAt(0).toUpperCase()) : '📱'}</div>
             <div class="group-contact-info">
-                <div class="group-contact-phone">${c.name || c.displayPhone}</div>
+                <div class="group-contact-phone">${escapeHtml(c.name || c.displayPhone)}</div>
                 ${c.name ? `<div style="font-size:11px;color:var(--text-light);">${c.displayPhone}</div>` : ''}
             </div>
             <button class="group-send-btn ${c.sent ? 'done' : 'unsent'}" onclick="sendGroupInviteToOne('${c.phone}')" ${c.sent ? 'disabled' : ''}>
