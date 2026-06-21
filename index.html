@@ -1305,6 +1305,26 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+/**
+ * Escape a string for safe injection as a single-quoted JavaScript argument
+ * inside a double-quoted inline HTML handler, e.g. onclick="fn('${value}')".
+ * JS-escapes backslash and single-quote (so the argument can't be terminated early),
+ * then HTML-escapes &, ", <, > (so it can't break out of the attribute or markup).
+ * Prevents friend / recent-contact chip buttons from breaking on names that
+ * contain quotes or angle brackets (checklist 17.3).
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeForInlineHandlerArg(str) {
+    return String(str ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 /** Show a toast notification for 3 seconds */
 function showToast(message) {
     const toastEl = $('toast');
@@ -1861,8 +1881,8 @@ function renderRecentContactChip(contact) {
     const displayName   = contact.name || ('+' + contact.phone);
     const avatarContent = contact.name ? escapeHtml(contact.name.charAt(0).toUpperCase()) : '📱';
     const tagLabel      = contact.interaction === 'booked_you' ? '📅 Booked you' : '📨 Invited';
-    const safePhone     = contact.phone.replace(/'/g, "\\'");
-    const safeName      = (contact.name || '').replace(/'/g, "\\'");
+    const safePhone     = escapeForInlineHandlerArg(contact.phone);
+    const safeName      = escapeForInlineHandlerArg(contact.name || '');
 
     return `<div class="recent-chip">
         <div class="recent-chip-avatar">${avatarContent}</div>
@@ -2160,7 +2180,7 @@ function renderFriendChip(friendEntry) {
         : escapeHtml(friendEntry.name.charAt(0).toUpperCase());
 
     const isCalgoUser    = !!friendEntry.calgoId;
-    const safeName       = friendEntry.name.replace(/'/g, "\\'");
+    const safeName       = escapeForInlineHandlerArg(friendEntry.name);
     const removeBtn      = `<button class="friend-btn friend-btn-remove" title="Remove" onclick="confirmAndRemoveFriend('${friendEntry.id}','${safeName}')">✕</button>`;
 
     const actionButtons = isCalgoUser
@@ -2729,15 +2749,22 @@ function buildDayViewHourRow(dateStr, hour, userId, isPublic) {
     if (isPast && !manualBlock && !isBookedBusy) {
         return `<div class="hour-row${nightClass} past-time"><div class="hour-label">${timeLabel}</div><div class="hour-slot past-time${nightClass}"><span class="slot-label past-label">Passed ⏳</span></div></div>`;
     }
-    if (manualBlock && !isPublic) return buildBlockedDayRow(dateStr, hour, timeLabel, nightClass, manualBlock);
-    if (isBookedBusy) return `<div class="hour-row${nightClass}"><div class="hour-label">${timeLabel}</div><div class="hour-slot busy${nightClass}"><span class="slot-label">⛔ Busy</span></div></div>`;
+    if (manualBlock && !isPublic) {
+        // Past busy slots stay busy + greyed, but can no longer be toggled or relabelled (checklist 4.9)
+        if (isPast) {
+            const pastLabel = manualBlock.label ? ' — ' + escapeHtml(manualBlock.label) : '';
+            return `<div class="hour-row${nightClass} past-time"><div class="hour-label">${timeLabel}</div><div class="hour-slot blocked past-time${nightClass}"><span class="slot-label">⛔ Busy${pastLabel}</span></div></div>`;
+        }
+        return buildBlockedDayRow(dateStr, hour, timeLabel, nightClass, manualBlock);
+    }
+    if (isBookedBusy) return `<div class="hour-row${nightClass}${isPast ? ' past-time' : ''}"><div class="hour-label">${timeLabel}</div><div class="hour-slot busy${isPast ? ' past-time' : ''}${nightClass}"><span class="slot-label">⛔ Busy</span></div></div>`;
     if (!isPublic)    return `<div class="hour-row${nightClass}"><div class="hour-label">${timeLabel}</div><div class="hour-slot${nightClass}" onclick="toggleSlotBusy('${dateStr}',${hour})" style="cursor:pointer;" title="Click to mark Busy"><span class="slot-label">${icon} Available</span></div></div>`;
     return `<div class="hour-row${nightClass}"><div class="hour-label">${timeLabel}</div><div class="hour-slot${nightClass}" onclick="openBookingModal('${dateStr}','${time24}','${userId}')"><span class="slot-label">${icon} Available</span><span class="slot-action">Book</span></div></div>`;
 }
 
 function buildBlockedDayRow(dateStr, hour, timeLabel, nightClass, block) {
     const label = escapeHtml(block.label || '');
-    return `<div class="hour-row${nightClass}">
+    return `<div class="hour-row has-label${nightClass}">
   <div class="hour-label">${timeLabel}</div>
   <div class="hour-slot blocked${nightClass}" style="flex-direction:column;align-items:flex-start;gap:4px;cursor:pointer;" onclick="toggleSlotBusy('${dateStr}',${hour})" title="Click to mark Available">
     <span style="font-weight:700;">⛔ Busy</span>
@@ -2777,8 +2804,9 @@ function renderWeekView(container, titleEl, userId, isPublic) {
             if (isToday) cls += ' today';
             let oc = '', txt = '';
             const isPast = isHourInPast(ds, hour);
-            if (isPast && !busy) {
-                html += `<div class="${cls} past-time"><span style="font-size:9px;color:#94a3b8;">⏳</span></div>`;
+            if (isPast) {
+                // Past slots are read-only: busy stays busy + greyed, free shows ⏳ (checklist 4.9)
+                html += `<div class="${cls} past-time">${busy ? '⛔' : '<span style="font-size:9px;color:#94a3b8;">⏳</span>'}</div>`;
             } else if (!isPublic) {
                 txt = busy ? '⛔' : (isNight ? '🌑' : '☀️');
                 oc  = `onclick="toggleSlotBusy('${ds}',${hour})" title="${busy ? 'Click to mark Available' : 'Click to mark Busy'}"`;
@@ -2940,6 +2968,17 @@ function buildCleanCalendarElementForExport() {
     const calendarGrid = $(calViewId).cloneNode(true);
     const titleText    = $(titleId)?.textContent || '';
 
+    // html2canvas does not render <input> text reliably, which clips slot labels
+    // in the exported/printed image (checklist 8.7). Convert each label input
+    // into a static span so the tag text is captured in full.
+    calendarGrid.querySelectorAll('input.slot-tag-input').forEach(inp => {
+        const val  = (inp.value || '').trim();
+        const span = document.createElement('span');
+        span.textContent = val ? '🏷️ ' + val : '';
+        span.style.cssText = 'font-size:11px;font-weight:600;color:#b91c1c;white-space:normal;word-break:break-word;';
+        inp.replaceWith(span);
+    });
+
     const wrapper = document.createElement('div');
     wrapper.style.cssText = [
         'position:absolute', 'top:-9999px', 'left:-9999px',
@@ -3035,6 +3074,9 @@ function saveCalendarViewAsJpg() {
 /** Holds the parsed event list between parseIcsFileContent and importSelectedIcsEvents */
 let parsedIcsEvents = [];
 
+/** Count of events skipped because they were entirely in the past (set by parseIcsFileContent) */
+let lastIcsSkippedPastCount = 0;
+
 /**
  * Open the import modal and reset it to the upload step.
  */
@@ -3079,7 +3121,11 @@ function handleIcsFileUpload(file) {
     reader.onload = e => {
         const parsedEvents = parseIcsFileContent(e.target.result);
         if (!parsedEvents.length) {
-            showToast('⚠️ No events found in this file');
+            if (lastIcsSkippedPastCount > 0) {
+                showToast(`⚠️ Only past events found — ${lastIcsSkippedPastCount} event${lastIcsSkippedPastCount > 1 ? 's were' : ' was'} skipped (already passed)`);
+            } else {
+                showToast('⚠️ No events found in this file');
+            }
             return;
         }
         parsedIcsEvents = parsedEvents;
@@ -3098,43 +3144,54 @@ function handleIcsFileUpload(file) {
  * @returns {Array<{title:string, date:string, start:string, end:string}>}
  */
 function parseIcsFileContent(icsText) {
+    // Unfold ICS line folding (RFC 5545: a CRLF/LF followed by space or tab continues the line)
+    const unfolded = icsText.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '');
     const events  = [];
-    const blocks  = icsText.split('BEGIN:VEVENT');
+    const blocks  = unfolded.split('BEGIN:VEVENT');
     blocks.shift(); // Remove everything before first VEVENT
 
     for (const block of blocks) {
         const getValue = key => {
             // Match both simple (KEY:value) and parameterized (KEY;TZID=...:value) forms
-            const match = block.match(new RegExp(key + '(?:;[^:]+)?:([^\\r\\n]+)'));
+            const match = block.match(new RegExp(key + '(?:;[^:\\r\\n]+)?:([^\\r\\n]+)'));
             return match ? match[1].trim() : null;
         };
 
         const rawTitle  = getValue('SUMMARY') || 'Imported Event';
         const rawStart  = getValue('DTSTART');
         const rawEnd    = getValue('DTEND');
-
         if (!rawStart) continue;
 
         const parsedStart = parseIcsDateTime(rawStart);
-        const parsedEnd   = rawEnd ? parseIcsDateTime(rawEnd) : parsedStart;
         if (!parsedStart) continue;
+        const parsedEnd   = rawEnd ? parseIcsDateTime(rawEnd) : null;
 
         // Decode common ICS text escapes
         const cleanTitle = rawTitle.replace(/\\n/g, ' ').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
 
-        events.push({
-            title: cleanTitle,
-            date:  parsedStart.date,
-            start: parsedStart.time,
-            end:   parsedEnd.time
-        });
+        if (parsedStart.allDay) {
+            // All-day event (e.g. Google "Full day"); DTEND is exclusive and may span days.
+            const startD = new Date(parsedStart.date + 'T00:00:00');
+            let endD;
+            if (parsedEnd && parsedEnd.date > parsedStart.date) {
+                endD = new Date(parsedEnd.date + 'T00:00:00');
+            } else {
+                endD = new Date(startD); endD.setDate(endD.getDate() + 1);
+            }
+            for (let d = new Date(startD); d < endD; d.setDate(d.getDate() + 1)) {
+                events.push({ title: cleanTitle, date: formatDateToISO(d), start: '00:00', end: '23:59', allDay: true });
+            }
+        } else {
+            const endTime = (parsedEnd && !parsedEnd.allDay) ? parsedEnd.time : parsedStart.time;
+            events.push({ title: cleanTitle, date: parsedStart.date, start: parsedStart.time, end: endTime, allDay: false });
+        }
     }
 
-    // Sort by date then start time, remove past events
+    // Sort by date then start time, remove past events; remember how many were skipped as past
     const todayStr = formatDateToISO(new Date());
-    return events
-        .filter(e => e.date >= todayStr)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+    const future   = events.filter(e => e.date >= todayStr);
+    lastIcsSkippedPastCount = events.length - future.length;
+    return future.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
 }
 
 /**
@@ -3145,8 +3202,8 @@ function parseIcsFileContent(icsText) {
  * @returns {{date:string, time:string}|null}
  */
 function parseIcsDateTime(rawValue) {
-    // Strip timezone suffix
-    const clean = rawValue.replace(/Z$/, '').replace(/[+-]\d{4}$/, '');
+    // Strip timezone suffix and any stray whitespace
+    const clean = rawValue.trim().replace(/Z$/, '').replace(/[+-]\d{4}$/, '');
 
     if (clean.includes('T')) {
         // Full datetime: 20250601T103000
@@ -3155,12 +3212,12 @@ function parseIcsDateTime(rawValue) {
         const isoDate   = `${datePart.substring(0,4)}-${datePart.substring(4,6)}-${datePart.substring(6,8)}`;
         const isoTime   = `${timePart.substring(0,2)}:${timePart.substring(2,4)}`;
         if (isNaN(Date.parse(isoDate))) return null;
-        return { date: isoDate, time: isoTime };
+        return { date: isoDate, time: isoTime, allDay: false };
     } else {
-        // Date-only: 20250601 (all-day event)
+        // Date-only: 20250601 (all-day event, e.g. Google "Full day" events)
         const isoDate = `${clean.substring(0,4)}-${clean.substring(4,6)}-${clean.substring(6,8)}`;
         if (isNaN(Date.parse(isoDate))) return null;
-        return { date: isoDate, time: '00:00' };
+        return { date: isoDate, time: '00:00', allDay: true };
     }
 }
 
@@ -4363,9 +4420,19 @@ function handleEventUrl(params) {
 
 let deferredInstallPrompt = null;
 
+/** True when the app is already running as an installed PWA (home-screen / standalone). */
+function isRunningInstalled() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredInstallPrompt = e;
-    const bar = $('installBar'); if (bar) bar.style.display = 'flex';
+    if (!isRunningInstalled()) { const bar = $('installBar'); if (bar) bar.style.display = 'flex'; }
+});
+
+window.addEventListener('appinstalled', () => {
+    const bar = $('installBar'); if (bar) bar.style.display = 'none';
+    deferredInstallPrompt = null;
 });
 
 function installApp() {
@@ -4381,7 +4448,7 @@ function installApp() {
         showToast(isIOS ? '📲 Tap the Share button ↗ then "Add to Home Screen"' : '📲 Use your browser menu → "Add to Home Screen" or "Install App"');
     }
 }
-if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+if (!isRunningInstalled() && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
     const bar = $('installBar'); if (bar) bar.style.display = 'flex';
 }
 
@@ -4421,11 +4488,24 @@ async function initWithTargetUser(targetUid) {
     let user = Storage.getUsers()[targetUid];
     if (!user && firestoreDb) {
         try {
-            const doc = await firestoreDb.collection('users').doc(targetUid).get();
+            // Race the lookup against an 8s timeout so a slow/offline network
+            // can never leave the loading overlay spinning forever (checklist 1.6).
+            const doc = await Promise.race([
+                firestoreDb.collection('users').doc(targetUid).get(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+            ]);
             if (doc.exists) { user = doc.data(); const us = Storage.getUsers(); us[targetUid] = user; Storage.setUsers(us); }
         } catch(e) {}
     }
-    if (!user) { showToast('❌ User not found'); return; }
+    if (!user) {
+        // Recover gracefully instead of hanging on the loading screen (checklist 1.6).
+        hideLoadingOverlay();
+        showToast('❌ This calendar could not be found');
+        window.history.replaceState({}, '', getBaseUrl());
+        if (tryAutoLoginFromRememberedSession()) initFromSavedSession();
+        else $('loginScreen').classList.remove('hidden');
+        return;
+    }
     if (firestoreDb) {
         try {
             const [bSnap, blSnap] = await Promise.all([
